@@ -14,7 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          channels_used: Json
+          combined_score: number | null
+          created_at: string
+          delivery_status: Json
+          id: string
+          notification_sent_at: string | null
+          triggered_at: string
+          user_id: string
+          user_response: string | null
+        }
+        Insert: {
+          channels_used?: Json
+          combined_score?: number | null
+          created_at?: string
+          delivery_status?: Json
+          id?: string
+          notification_sent_at?: string | null
+          triggered_at?: string
+          user_id: string
+          user_response?: string | null
+        }
+        Update: {
+          channels_used?: Json
+          combined_score?: number | null
+          created_at?: string
+          delivery_status?: Json
+          id?: string
+          notification_sent_at?: string | null
+          triggered_at?: string
+          user_id?: string
+          user_response?: string | null
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          relationship: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          relationship?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          relationship?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      monitoring_log: {
+        Row: {
+          captured_at: string
+          combined_score: number
+          created_at: string
+          device_inference_time_ms: number | null
+          id: string
+          keystroke_score: number | null
+          sensor_score: number | null
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          combined_score: number
+          created_at?: string
+          device_inference_time_ms?: number | null
+          id?: string
+          keystroke_score?: number | null
+          sensor_score?: number | null
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          combined_score?: number
+          created_at?: string
+          device_inference_time_ms?: number | null
+          id?: string
+          keystroke_score?: number | null
+          sensor_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          consent_given: boolean
+          consent_timestamp: string | null
+          consent_version: string | null
+          created_at: string
+          email: string | null
+          id: string
+        }
+        Insert: {
+          consent_given?: boolean
+          consent_timestamp?: string | null
+          consent_version?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+        }
+        Update: {
+          consent_given?: boolean
+          consent_timestamp?: string | null
+          consent_version?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      sensor_baselines: {
+        Row: {
+          baseline_features: Json
+          calibration_date: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          baseline_features: Json
+          calibration_date?: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          baseline_features?: Json
+          calibration_date?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      typing_baselines: {
+        Row: {
+          baseline_features: Json
+          calibration_date: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          baseline_features: Json
+          calibration_date?: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          baseline_features?: Json
+          calibration_date?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
