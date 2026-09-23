@@ -12,11 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicConsentRouteImport } from './routes/api/public/consent'
 import { Route as ApiPublicContactsRouteImport } from './routes/api/public/contacts'
+import { Route as ApiPublicAlertsTriggerRouteImport } from './routes/api/public/alerts.trigger'
 import { Route as ApiPublicAuthLoginRouteImport } from './routes/api/public/auth.login'
 import { Route as ApiPublicAuthSignupRouteImport } from './routes/api/public/auth.signup'
 import { Route as ApiPublicBaselinesSyncRouteImport } from './routes/api/public/baselines.sync'
 import { Route as ApiPublicContactsIdRouteImport } from './routes/api/public/contacts.$id'
 import { Route as ApiPublicMonitoringLogRouteImport } from './routes/api/public/monitoring.log'
+import { Route as ApiPublicAlertsIdDismissRouteImport } from './routes/api/public/alerts.$id.dismiss'
+import { Route as ApiPublicAlertsIdNotifyRouteImport } from './routes/api/public/alerts.$id.notify'
+import { Route as ApiPublicAlertsIdStatusRouteImport } from './routes/api/public/alerts.$id.status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -31,6 +35,11 @@ const ApiPublicConsentRoute = ApiPublicConsentRouteImport.update({
 const ApiPublicContactsRoute = ApiPublicContactsRouteImport.update({
   id: '/api/public/contacts',
   path: '/api/public/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAlertsTriggerRoute = ApiPublicAlertsTriggerRouteImport.update({
+  id: '/api/public/alerts/trigger',
+  path: '/api/public/alerts/trigger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAuthLoginRoute = ApiPublicAuthLoginRouteImport.update({
@@ -58,37 +67,65 @@ const ApiPublicMonitoringLogRoute = ApiPublicMonitoringLogRouteImport.update({
   path: '/api/public/monitoring/log',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAlertsIdDismissRoute =
+  ApiPublicAlertsIdDismissRouteImport.update({
+    id: '/api/public/alerts/$id/dismiss',
+    path: '/api/public/alerts/$id/dismiss',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAlertsIdNotifyRoute = ApiPublicAlertsIdNotifyRouteImport.update({
+  id: '/api/public/alerts/$id/notify',
+  path: '/api/public/alerts/$id/notify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAlertsIdStatusRoute = ApiPublicAlertsIdStatusRouteImport.update({
+  id: '/api/public/alerts/$id/status',
+  path: '/api/public/alerts/$id/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
+  '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
+  '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
+  '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
+  '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
+  '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
+  '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
+  '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
+  '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
+  '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
+  '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
+  '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
+  '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,41 +133,57 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/consent'
     | '/api/public/contacts'
+    | '/api/public/alerts/trigger'
     | '/api/public/auth/login'
     | '/api/public/auth/signup'
     | '/api/public/baselines/sync'
     | '/api/public/contacts/$id'
     | '/api/public/monitoring/log'
+    | '/api/public/alerts/$id/dismiss'
+    | '/api/public/alerts/$id/notify'
+    | '/api/public/alerts/$id/status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/api/public/consent'
     | '/api/public/contacts'
+    | '/api/public/alerts/trigger'
     | '/api/public/auth/login'
     | '/api/public/auth/signup'
     | '/api/public/baselines/sync'
     | '/api/public/contacts/$id'
     | '/api/public/monitoring/log'
+    | '/api/public/alerts/$id/dismiss'
+    | '/api/public/alerts/$id/notify'
+    | '/api/public/alerts/$id/status'
   id:
     | '__root__'
     | '/'
     | '/api/public/consent'
     | '/api/public/contacts'
+    | '/api/public/alerts/trigger'
     | '/api/public/auth/login'
     | '/api/public/auth/signup'
     | '/api/public/baselines/sync'
     | '/api/public/contacts/$id'
     | '/api/public/monitoring/log'
+    | '/api/public/alerts/$id/dismiss'
+    | '/api/public/alerts/$id/notify'
+    | '/api/public/alerts/$id/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicConsentRoute: typeof ApiPublicConsentRoute
   ApiPublicContactsRoute: typeof ApiPublicContactsRouteWithChildren
+  ApiPublicAlertsTriggerRoute: typeof ApiPublicAlertsTriggerRoute
   ApiPublicAuthLoginRoute: typeof ApiPublicAuthLoginRoute
   ApiPublicAuthSignupRoute: typeof ApiPublicAuthSignupRoute
   ApiPublicBaselinesSyncRoute: typeof ApiPublicBaselinesSyncRoute
   ApiPublicMonitoringLogRoute: typeof ApiPublicMonitoringLogRoute
+  ApiPublicAlertsIdDismissRoute: typeof ApiPublicAlertsIdDismissRoute
+  ApiPublicAlertsIdNotifyRoute: typeof ApiPublicAlertsIdNotifyRoute
+  ApiPublicAlertsIdStatusRoute: typeof ApiPublicAlertsIdStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -154,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/contacts'
       fullPath: '/api/public/contacts'
       preLoaderRoute: typeof ApiPublicContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/alerts/trigger': {
+      id: '/api/public/alerts/trigger'
+      path: '/api/public/alerts/trigger'
+      fullPath: '/api/public/alerts/trigger'
+      preLoaderRoute: typeof ApiPublicAlertsTriggerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/auth/login': {
@@ -191,6 +251,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMonitoringLogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/alerts/$id/dismiss': {
+      id: '/api/public/alerts/$id/dismiss'
+      path: '/api/public/alerts/$id/dismiss'
+      fullPath: '/api/public/alerts/$id/dismiss'
+      preLoaderRoute: typeof ApiPublicAlertsIdDismissRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/alerts/$id/notify': {
+      id: '/api/public/alerts/$id/notify'
+      path: '/api/public/alerts/$id/notify'
+      fullPath: '/api/public/alerts/$id/notify'
+      preLoaderRoute: typeof ApiPublicAlertsIdNotifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/alerts/$id/status': {
+      id: '/api/public/alerts/$id/status'
+      path: '/api/public/alerts/$id/status'
+      fullPath: '/api/public/alerts/$id/status'
+      preLoaderRoute: typeof ApiPublicAlertsIdStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -209,10 +290,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicConsentRoute: ApiPublicConsentRoute,
   ApiPublicContactsRoute: ApiPublicContactsRouteWithChildren,
+  ApiPublicAlertsTriggerRoute: ApiPublicAlertsTriggerRoute,
   ApiPublicAuthLoginRoute: ApiPublicAuthLoginRoute,
   ApiPublicAuthSignupRoute: ApiPublicAuthSignupRoute,
   ApiPublicBaselinesSyncRoute: ApiPublicBaselinesSyncRoute,
   ApiPublicMonitoringLogRoute: ApiPublicMonitoringLogRoute,
+  ApiPublicAlertsIdDismissRoute: ApiPublicAlertsIdDismissRoute,
+  ApiPublicAlertsIdNotifyRoute: ApiPublicAlertsIdNotifyRoute,
+  ApiPublicAlertsIdStatusRoute: ApiPublicAlertsIdStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
