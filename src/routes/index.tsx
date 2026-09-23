@@ -71,11 +71,10 @@ function ProgressRing({ value, label, size = 176 }: { value: number; label: stri
   );
 }
 
-function Setup({ onComplete }: { onComplete: () => void }) {
+function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; onComplete: () => void }) {
   const [step, setStep] = useState(1);
   const [consent, setConsent] = useState(false);
   const [learning, setLearning] = useState(0);
-  const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
 
   useEffect(() => {
     if (step !== 2 || learning >= 8) return;
