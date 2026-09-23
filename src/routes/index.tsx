@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ChevronLeft, Plus, Settings, Trash2, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, ChevronLeft, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 
 // No head() here: the home route inherits title/description/og/twitter from
 // __root.tsx, and ships no og:image so serve-time hosting can inject the
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Screen = "setup" | "done" | "soft" | "full" | "alarm";
+type Screen = "setup" | "done" | "closed" | "soft" | "full" | "alarm";
 type Contact = { id: number; name: string; phone: string; status: "Not tested" | "Sent" | "Delivered" };
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
