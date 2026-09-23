@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ChevronLeft, Plus, Settings, Trash2, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, ChevronLeft, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 
 // No head() here: the home route inherits title/description/og/twitter from
 // __root.tsx, and ships no og:image so serve-time hosting can inject the
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Screen = "setup" | "done" | "soft" | "full" | "alarm";
+type Screen = "setup" | "done" | "closed" | "soft" | "full" | "alarm";
 type Contact = { id: number; name: string; phone: string; status: "Not tested" | "Sent" | "Delivered" };
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
@@ -72,11 +71,10 @@ function ProgressRing({ value, label, size = 176 }: { value: number; label: stri
   );
 }
 
-function Setup({ onComplete }: { onComplete: () => void }) {
+function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; onComplete: () => void }) {
   const [step, setStep] = useState(1);
   const [consent, setConsent] = useState(false);
   const [learning, setLearning] = useState(0);
-  const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
 
   useEffect(() => {
     if (step !== 2 || learning >= 8) return;
@@ -114,10 +112,10 @@ function Setup({ onComplete }: { onComplete: () => void }) {
               <p className="mb-3 text-sm font-semibold text-primary">Step 1 of 3</p>
               <h1 className="text-4xl font-semibold leading-tight md:text-5xl">Your words stay private.</h1>
               <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">Rhythm reads only the timing between your keystrokes, never the words you type.</p>
-              <label className="mt-10 flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-5 text-base font-medium">
-                <Checkbox checked={consent} onCheckedChange={(value) => setConsent(value === true)} />
+              <div className="mt-10 flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-5 text-base font-medium" onClick={() => setConsent((value) => !value)}>
+                <Checkbox checked={consent} onCheckedChange={(value) => setConsent(value === true)} onClick={(event) => event.stopPropagation()} />
                 I understand this is not a medical device
-              </label>
+              </div>
               <Button variant="calm" size="lg" className="mt-8 h-12 rounded-xl px-7 text-base" disabled={!consent} onClick={() => setStep(2)}>Continue</Button>
             </section>
           )}
@@ -164,34 +162,52 @@ function Setup({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-function Done({ onTrigger, toast, onReset }: { onTrigger: () => void; toast: string; onReset: () => void }) {
-  const [settings, setSettings] = useState(false);
-  const [sensitivity, setSensitivity] = useState("Balanced");
-  const [startup, setStartup] = useState(true);
+function Done({ onClose, contactCount }: { onClose: () => void; contactCount: number }) {
   return (
     <main className="grid min-h-screen place-items-center bg-background p-5">
-      <section className="relative flex h-[560px] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] border border-border bg-card p-7">
-        <div className="flex items-center justify-between"><Brand /><Button variant="ghost" size="icon" className="rounded-full" aria-label="Open settings" onClick={() => setSettings(true)}><Settings /></Button></div>
+      <section className="flex h-[560px] w-full max-w-[420px] flex-col rounded-[20px] border border-border bg-card p-7">
+        <Brand />
         <div className="flex flex-1 flex-col justify-center">
           <span className="mb-3 flex items-center gap-2 text-sm font-medium text-success"><i className="h-2 w-2 rounded-full bg-success" />Setup complete</span>
-          <h1 className="max-w-xs text-4xl font-semibold leading-tight">Rhythm runs quietly in the background.</h1>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">You can close this window. Rhythm keeps watching from the system tray and will only surface when something looks wrong.</p>
-          <div className="mt-8"><RhythmBars active /></div>
+          <h1 className="text-4xl font-semibold leading-tight">Initial setup done.</h1>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">You can close now. Rhythm keeps watching quietly in the background.</p>
         </div>
-        <div className="flex items-center justify-between border-t border-border pt-5 text-sm text-muted-foreground">
-          <span className="flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />2 emergency contacts added</span>
-          <Button variant="ghost" className="h-auto px-2 py-1 text-sm text-muted-foreground" onClick={onTrigger}>Simulate trigger</Button>
+        <div className="border-t border-border pt-5">
+          <Button variant="calm" size="lg" className="h-12 w-full rounded-xl text-base" onClick={onClose}>Close</Button>
+          <p className="mt-3 text-center text-sm text-muted-foreground">{contactCount} emergency contact{contactCount === 1 ? "" : "s"} added</p>
         </div>
+      </section>
+    </main>
+  );
+}
 
-        {settings && <div className="absolute inset-0 z-10 bg-card p-7">
-          <div className="flex items-center justify-between"><h2 className="text-2xl font-semibold">Settings</h2><Button variant="ghost" size="icon" aria-label="Close settings" onClick={() => setSettings(false)}><X /></Button></div>
-          <div className="mt-8 space-y-7">
-            <div><p className="font-medium">Emergency contacts</p><p className="mt-1 text-sm text-muted-foreground">Maya and Alex</p></div>
-            <div><p className="mb-3 font-medium">Sensitivity</p><div className="grid grid-cols-3 rounded-xl bg-muted p-1">{["Relaxed", "Balanced", "Sensitive"].map((level) => <Button key={level} variant={sensitivity === level ? "calm" : "ghost"} className="rounded-lg px-2" onClick={() => setSensitivity(level)}>{level}</Button>)}</div></div>
-            <label className="flex items-center justify-between gap-4"><span><span className="block font-medium">Pause with Windows startup</span><span className="mt-1 block text-sm text-muted-foreground">Start paused when you sign in</span></span><Switch checked={startup} onCheckedChange={setStartup} /></label>
-            <Button variant="ghost" className="w-full justify-start px-0 text-destructive hover:text-destructive" onClick={onReset}><Trash2 />Delete all my data</Button>
-          </div>
-        </div>}
+function Closed({ contacts, setContacts, toast }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; toast: string }) {
+  const updateContact = (id: number, key: "name" | "phone", value: string) => {
+    setContacts((all) => all.map((contact) => contact.id === id ? { ...contact, [key]: value } : contact));
+  };
+  const removeContact = (id: number) => {
+    setContacts((all) => all.filter((contact) => contact.id !== id));
+  };
+  return (
+    <main className="grid min-h-screen place-items-center bg-background p-5">
+      <section className="w-full max-w-[420px] rounded-[20px] border border-border bg-card p-7">
+        <Brand />
+        <h2 className="mt-7 text-2xl font-semibold">Emergency contacts</h2>
+        <p className="mt-1 text-sm text-muted-foreground">The people Rhythm alerts if you need help.</p>
+        <div className="mt-5 space-y-3">
+          {contacts.map((contact) => (
+            <div key={contact.id} className="grid gap-3 rounded-xl border border-border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <label className="flex-1 text-sm font-medium">Name<Input className="mt-2 h-10 rounded-lg text-base" value={contact.name} onChange={(event) => updateContact(contact.id, "name", event.target.value)} /></label>
+                <Button variant="ghost" size="icon" className="mt-6 shrink-0 rounded-full text-muted-foreground hover:text-destructive" aria-label={`Remove ${contact.name || "contact"}`} onClick={() => removeContact(contact.id)}><Trash2 /></Button>
+              </div>
+              <label className="text-sm font-medium">Phone number<Input className="mt-2 h-10 rounded-lg text-base" value={contact.phone} onChange={(event) => updateContact(contact.id, "phone", event.target.value)} /></label>
+            </div>
+          ))}
+          {contacts.length === 0 && <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">No contacts yet. Add someone you trust.</p>}
+          {contacts.length < 3 && <Button variant="link" className="px-0 text-base" onClick={() => setContacts((all) => [...all, { id: Date.now(), name: "", phone: "", status: "Not tested" }])}><Plus />Add another contact</Button>}
+        </div>
+        <p className="mt-7 text-sm text-muted-foreground">Rhythm is watching quietly in the background.</p>
       </section>
       {toast && <div className="toast-enter fixed bottom-8 left-1/2 -translate-x-1/2 rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background">{toast}</div>}
     </main>
@@ -240,10 +256,12 @@ function Alarm({ onCancel }: { onCancel: () => void }) {
 function Index() {
   const [screen, setScreen] = useState<Screen>("setup");
   const [toast, setToast] = useState("");
-  const backHome = useCallback(() => { setScreen("done"); setToast("Thanks, back to watching quietly"); window.setTimeout(() => setToast(""), 2600); }, []);
-  if (screen === "setup") return <Setup onComplete={() => setScreen("done")} />;
+  const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
+  const backHome = useCallback(() => { setScreen("closed"); setToast("Thanks — glad you're okay"); window.setTimeout(() => setToast(""), 2600); }, []);
+  if (screen === "setup") return <Setup contacts={contacts} setContacts={setContacts} onComplete={() => setScreen("done")} />;
   if (screen === "soft") return <SoftCheckIn onOkay={backHome} onMinute={() => setScreen("full")} onExpire={() => setScreen("full")} />;
   if (screen === "full") return <FullCheckIn onOkay={backHome} onHelp={() => setScreen("alarm")} onExpire={() => setScreen("alarm")} />;
   if (screen === "alarm") return <Alarm onCancel={backHome} />;
-  return <Done onTrigger={() => setScreen("soft")} toast={toast} onReset={() => setScreen("setup")} />;
+  if (screen === "done") return <Done contactCount={contacts.length} onClose={() => setScreen("closed")} />;
+  return <Closed contacts={contacts} setContacts={setContacts} toast={toast} />;
 }
