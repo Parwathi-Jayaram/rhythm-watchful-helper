@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Screen = "setup" | "home" | "soft" | "full" | "alarm";
+type Screen = "setup" | "done" | "soft" | "full" | "alarm";
 type Contact = { id: number; name: string; phone: string; status: "Not tested" | "Sent" | "Delivered" };
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
@@ -164,24 +164,19 @@ function Setup({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-function Home({ onTrigger, toast, onReset }: { onTrigger: () => void; toast: string; onReset: () => void }) {
+function Done({ onTrigger, toast, onReset }: { onTrigger: () => void; toast: string; onReset: () => void }) {
   const [settings, setSettings] = useState(false);
-  const [paused, setPaused] = useState<"watching" | "timed" | "away">("watching");
   const [sensitivity, setSensitivity] = useState("Balanced");
   const [startup, setStartup] = useState(true);
-  const status = paused === "timed" ? "Paused until 4:30 PM" : paused === "away" ? "Paused while you're away" : "Watching quietly";
   return (
     <main className="grid min-h-screen place-items-center bg-background p-5">
       <section className="relative flex h-[560px] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] border border-border bg-card p-7">
         <div className="flex items-center justify-between"><Brand /><Button variant="ghost" size="icon" className="rounded-full" aria-label="Open settings" onClick={() => setSettings(true)}><Settings /></Button></div>
         <div className="flex flex-1 flex-col justify-center">
-          <span className="mb-3 flex items-center gap-2 text-sm font-medium text-success"><i className="h-2 w-2 rounded-full bg-success" />Active</span>
-          <h1 className="max-w-xs text-4xl font-semibold leading-tight">{status}</h1>
-          <div className="mt-8"><RhythmBars active={paused === "watching"} /></div>
-          <div className="mt-8 space-y-3">
-            <Button variant="calm" size="lg" className="h-12 w-full rounded-xl text-base" onClick={() => setPaused("timed")}>Pause for 30 minutes</Button>
-            <Button variant="quiet" size="lg" className="h-12 w-full rounded-xl text-base" onClick={() => setPaused("away")}>I'm stepping away</Button>
-          </div>
+          <span className="mb-3 flex items-center gap-2 text-sm font-medium text-success"><i className="h-2 w-2 rounded-full bg-success" />Setup complete</span>
+          <h1 className="max-w-xs text-4xl font-semibold leading-tight">Rhythm runs quietly in the background.</h1>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">You can close this window. Rhythm keeps watching from the system tray and will only surface when something looks wrong.</p>
+          <div className="mt-8"><RhythmBars active /></div>
         </div>
         <div className="flex items-center justify-between border-t border-border pt-5 text-sm text-muted-foreground">
           <span className="flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />2 emergency contacts added</span>
@@ -245,10 +240,10 @@ function Alarm({ onCancel }: { onCancel: () => void }) {
 function Index() {
   const [screen, setScreen] = useState<Screen>("setup");
   const [toast, setToast] = useState("");
-  const backHome = useCallback(() => { setScreen("home"); setToast("Thanks, back to watching"); window.setTimeout(() => setToast(""), 2600); }, []);
-  if (screen === "setup") return <Setup onComplete={() => setScreen("home")} />;
+  const backHome = useCallback(() => { setScreen("done"); setToast("Thanks, back to watching quietly"); window.setTimeout(() => setToast(""), 2600); }, []);
+  if (screen === "setup") return <Setup onComplete={() => setScreen("done")} />;
   if (screen === "soft") return <SoftCheckIn onOkay={backHome} onMinute={() => setScreen("full")} onExpire={() => setScreen("full")} />;
   if (screen === "full") return <FullCheckIn onOkay={backHome} onHelp={() => setScreen("alarm")} onExpire={() => setScreen("alarm")} />;
   if (screen === "alarm") return <Alarm onCancel={backHome} />;
-  return <Home onTrigger={() => setScreen("soft")} toast={toast} onReset={() => setScreen("setup")} />;
+  return <Done onTrigger={() => setScreen("soft")} toast={toast} onReset={() => setScreen("setup")} />;
 }
