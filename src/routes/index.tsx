@@ -112,10 +112,10 @@ function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; set
               <p className="mb-3 text-sm font-semibold text-primary">Step 1 of 3</p>
               <h1 className="text-4xl font-semibold leading-tight md:text-5xl">Your words stay private.</h1>
               <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">Rhythm reads only the timing between your keystrokes, never the words you type.</p>
-              <label className="mt-10 flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-5 text-base font-medium">
-                <Checkbox checked={consent} onCheckedChange={(value) => setConsent(value === true)} />
+              <div className="mt-10 flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-5 text-base font-medium" onClick={() => setConsent((value) => !value)}>
+                <Checkbox checked={consent} onCheckedChange={(value) => setConsent(value === true)} onClick={(event) => event.stopPropagation()} />
                 I understand this is not a medical device
-              </label>
+              </div>
               <Button variant="calm" size="lg" className="mt-8 h-12 rounded-xl px-7 text-base" disabled={!consent} onClick={() => setStep(2)}>Continue</Button>
             </section>
           )}
