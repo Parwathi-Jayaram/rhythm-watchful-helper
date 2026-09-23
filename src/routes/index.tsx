@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ChevronLeft, Gear, Plus, Trash2, WifiOff, X } from "lucide-react";
+import { Check, ChevronLeft, Plus, Settings, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -173,7 +173,7 @@ function Home({ onTrigger, toast, onReset }: { onTrigger: () => void; toast: str
   return (
     <main className="grid min-h-screen place-items-center bg-background p-5">
       <section className="relative flex h-[560px] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] border border-border bg-card p-7">
-        <div className="flex items-center justify-between"><Brand /><Button variant="ghost" size="icon" className="rounded-full" aria-label="Open settings" onClick={() => setSettings(true)}><Gear /></Button></div>
+        <div className="flex items-center justify-between"><Brand /><Button variant="ghost" size="icon" className="rounded-full" aria-label="Open settings" onClick={() => setSettings(true)}><Settings /></Button></div>
         <div className="flex flex-1 flex-col justify-center">
           <span className="mb-3 flex items-center gap-2 text-sm font-medium text-success"><i className="h-2 w-2 rounded-full bg-success" />Active</span>
           <h1 className="max-w-xs text-4xl font-semibold leading-tight">{status}</h1>
