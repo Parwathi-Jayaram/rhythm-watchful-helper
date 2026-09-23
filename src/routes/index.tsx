@@ -256,10 +256,12 @@ function Alarm({ onCancel }: { onCancel: () => void }) {
 function Index() {
   const [screen, setScreen] = useState<Screen>("setup");
   const [toast, setToast] = useState("");
-  const backHome = useCallback(() => { setScreen("done"); setToast("Thanks, back to watching quietly"); window.setTimeout(() => setToast(""), 2600); }, []);
-  if (screen === "setup") return <Setup onComplete={() => setScreen("done")} />;
+  const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
+  const backHome = useCallback(() => { setScreen("closed"); setToast("Thanks — glad you're okay"); window.setTimeout(() => setToast(""), 2600); }, []);
+  if (screen === "setup") return <Setup contacts={contacts} setContacts={setContacts} onComplete={() => setScreen("done")} />;
   if (screen === "soft") return <SoftCheckIn onOkay={backHome} onMinute={() => setScreen("full")} onExpire={() => setScreen("full")} />;
   if (screen === "full") return <FullCheckIn onOkay={backHome} onHelp={() => setScreen("alarm")} onExpire={() => setScreen("alarm")} />;
   if (screen === "alarm") return <Alarm onCancel={backHome} />;
-  return <Done onTrigger={() => setScreen("soft")} toast={toast} onReset={() => setScreen("setup")} />;
+  if (screen === "done") return <Done contactCount={contacts.length} onClose={() => setScreen("closed")} />;
+  return <Closed contacts={contacts} setContacts={setContacts} toast={toast} />;
 }
