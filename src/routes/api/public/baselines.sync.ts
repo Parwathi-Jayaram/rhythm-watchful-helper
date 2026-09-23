@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import type { Json } from "@/integrations/supabase/types";
 import { errorResponse, isResponse, json, readJson, requireUser } from "@/lib/api.server";
 
 // Derived feature vectors only — never raw keystrokes or raw sensor waveforms.
@@ -19,43 +20,49 @@ export const Route = createFileRoute("/api/public/baselines/sync")({
 
         const parsed = schema.safeParse(await readJson(request));
         if (!parsed.success) return errorResponse("typing_baseline or sensor_baseline required");
-        const { typing_baseline, sensor_baseline, calibration_date } = parsed.data;
-        if (!typing_baseline && !sensor_baseline) {
+        const typingBaseline = parsed.data.typing_baseline as Json | undefined;
+        const sensorBaseline = parsed.data.sensor_baseline as Json | undefined;
+        if (!typingBaseline && !sensorBaseline) {
           return errorResponse("typing_baseline or sensor_baseline required");
         }
 
-        const calibratedAt = calibration_date ?? new Date().toISOString();
-        const saved: Record<string, string> = {};
+        const calibratedAt = parsed.data.calibration_date ?? new Date().toISOString();
+        let typingBaselineId: string | null = null;
+        let sensorBaselineId: string | null = null;
 
-        if (typing_baseline) {
+        if (typingBaseline) {
           const { data, error } = await auth.supabase
             .from("typing_baselines")
             .insert({
               user_id: auth.userId,
-              baseline_features: typing_baseline,
+              baseline_features: typingBaseline,
               calibration_date: calibratedAt,
             })
             .select("id")
             .single();
           if (error) return errorResponse(error.message, 400);
-          saved.typing_baseline_id = data.id;
+          typingBaselineId = data.id;
         }
 
-        if (sensor_baseline) {
+        if (sensorBaseline) {
           const { data, error } = await auth.supabase
             .from("sensor_baselines")
             .insert({
               user_id: auth.userId,
-              baseline_features: sensor_baseline,
+              baseline_features: sensorBaseline,
               calibration_date: calibratedAt,
             })
             .select("id")
             .single();
           if (error) return errorResponse(error.message, 400);
-          saved.sensor_baseline_id = data.id;
+          sensorBaselineId = data.id;
         }
 
-        return json({ ...saved, calibration_date: calibratedAt });
+        return json({
+          typing_baseline_id: typingBaselineId,
+          sensor_baseline_id: sensorBaselineId,
+          calibration_date: calibratedAt,
+        });
       },
 
       // Cross-device recovery: fetch the most recent baselines back.
