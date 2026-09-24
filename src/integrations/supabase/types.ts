@@ -59,6 +59,10 @@ export type Database = {
           phone: string | null
           relationship: string | null
           user_id: string
+          verification_code: string | null
+          verification_sent_at: string | null
+          verification_status: string
+          verified_at: string | null
         }
         Insert: {
           created_at?: string
@@ -68,6 +72,10 @@ export type Database = {
           phone?: string | null
           relationship?: string | null
           user_id: string
+          verification_code?: string | null
+          verification_sent_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Update: {
           created_at?: string
@@ -77,6 +85,10 @@ export type Database = {
           phone?: string | null
           relationship?: string | null
           user_id?: string
+          verification_code?: string | null
+          verification_sent_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
