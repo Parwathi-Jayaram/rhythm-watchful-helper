@@ -182,6 +182,7 @@ export type Database = {
           calibration_date: string
           created_at: string
           id: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -189,6 +190,7 @@ export type Database = {
           calibration_date?: string
           created_at?: string
           id?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -196,6 +198,37 @@ export type Database = {
           calibration_date?: string
           created_at?: string
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          id: string
+          similarity_score: number
+          success: boolean
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          similarity_score: number
+          success: boolean
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          similarity_score?: number
+          success?: boolean
+          timestamp?: string
           user_id?: string
         }
         Relationships: []
