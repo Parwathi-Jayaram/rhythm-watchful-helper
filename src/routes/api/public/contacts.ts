@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { errorResponse, isResponse, json, readJson, requireUser } from "@/lib/api.server";
+import { publicContact, sendVerification } from "@/lib/contact-verification.server";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -19,11 +20,11 @@ export const Route = createFileRoute("/api/public/contacts")({
 
         const { data, error } = await auth.supabase
           .from("emergency_contacts")
-          .select("id, name, phone, email, relationship, created_at")
+          .select("*")
           .order("created_at", { ascending: true });
 
         if (error) return errorResponse(error.message, 400);
-        return json({ contacts: data });
+        return json({ contacts: (data ?? []).map(publicContact) });
       },
 
       POST: async ({ request }) => {
@@ -44,12 +45,21 @@ export const Route = createFileRoute("/api/public/contacts")({
             phone: parsed.data.phone ?? null,
             email: parsed.data.email ?? null,
             relationship: parsed.data.relationship ?? null,
+            verification_status: parsed.data.phone ? "pending" : "unverified",
           })
-          .select("id, name, phone, email, relationship, created_at")
+          .select("*")
           .single();
 
         if (error) return errorResponse(error.message, 400);
-        return json(data, 201);
+        if (!data.phone) return json({ contact: publicContact(data), verification: null }, 201);
+
+        const verification = await sendVerification(auth.supabase, data.id, auth.email ?? "A Rhythm user");
+        return json(
+          verification.ok
+            ? { contact: verification.contact, verification }
+            : { contact: publicContact(data), verification: { error: verification.error } },
+          201,
+        );
       },
     },
   },
