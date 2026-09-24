@@ -124,7 +124,7 @@ function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; set
             <section className="text-center">
               <p className="mb-3 text-sm font-semibold text-primary">Step 2 of 3</p>
               <h1 className="text-4xl font-semibold">Learn your typing</h1>
-              <p className="mt-4 text-lg text-muted-foreground">Keep typing normally in any app</p>
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground">The quick brown fox jumps over the lazy dog while questioning why programmers often work late at night, fueled by coffee and curiosity. Every keystroke tells a story: the rhythm of your typing, the pauses between words, and the pressure behind each letter reveal patterns unique to you. Numbers like 2024 and symbols such as @, #, and % add extra texture, helping the system learn how YOU type — not just what you type.</p>
               <div className="mt-8 flex justify-center"><ProgressRing value={learning / 8} label={`${learning}:00`} /></div>
               <div className="mx-auto mt-5 max-w-md"><RhythmBars active /></div>
               <p className="mt-3 text-sm text-muted-foreground">{learning < 8 ? `${8 - learning} minutes remaining` : "Your rhythm is ready"}</p>
