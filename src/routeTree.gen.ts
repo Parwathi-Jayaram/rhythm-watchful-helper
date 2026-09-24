@@ -21,6 +21,9 @@ import { Route as ApiPublicMonitoringLogRouteImport } from './routes/api/public/
 import { Route as ApiPublicAlertsIdDismissRouteImport } from './routes/api/public/alerts.$id.dismiss'
 import { Route as ApiPublicAlertsIdNotifyRouteImport } from './routes/api/public/alerts.$id.notify'
 import { Route as ApiPublicAlertsIdStatusRouteImport } from './routes/api/public/alerts.$id.status'
+import { Route as ApiPublicContactsIdResendVerificationRouteImport } from './routes/api/public/contacts.$id.resend-verification'
+import { Route as ApiPublicContactsIdSendVerificationRouteImport } from './routes/api/public/contacts.$id.send-verification'
+import { Route as ApiPublicContactsIdVerifyRouteImport } from './routes/api/public/contacts.$id.verify'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -83,6 +86,24 @@ const ApiPublicAlertsIdStatusRoute = ApiPublicAlertsIdStatusRouteImport.update({
   path: '/api/public/alerts/$id/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicContactsIdResendVerificationRoute =
+  ApiPublicContactsIdResendVerificationRouteImport.update({
+    id: '/resend-verification',
+    path: '/resend-verification',
+    getParentRoute: () => ApiPublicContactsIdRoute,
+  } as any)
+const ApiPublicContactsIdSendVerificationRoute =
+  ApiPublicContactsIdSendVerificationRouteImport.update({
+    id: '/send-verification',
+    path: '/send-verification',
+    getParentRoute: () => ApiPublicContactsIdRoute,
+  } as any)
+const ApiPublicContactsIdVerifyRoute =
+  ApiPublicContactsIdVerifyRouteImport.update({
+    id: '/verify',
+    path: '/verify',
+    getParentRoute: () => ApiPublicContactsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,11 +113,14 @@ export interface FileRoutesByFullPath {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
-  '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
+  '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
   '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
   '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
+  '/api/public/contacts/$id/resend-verification': typeof ApiPublicContactsIdResendVerificationRoute
+  '/api/public/contacts/$id/send-verification': typeof ApiPublicContactsIdSendVerificationRoute
+  '/api/public/contacts/$id/verify': typeof ApiPublicContactsIdVerifyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -106,11 +130,14 @@ export interface FileRoutesByTo {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
-  '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
+  '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
   '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
   '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
+  '/api/public/contacts/$id/resend-verification': typeof ApiPublicContactsIdResendVerificationRoute
+  '/api/public/contacts/$id/send-verification': typeof ApiPublicContactsIdSendVerificationRoute
+  '/api/public/contacts/$id/verify': typeof ApiPublicContactsIdVerifyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,11 +148,14 @@ export interface FileRoutesById {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/signup': typeof ApiPublicAuthSignupRoute
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
-  '/api/public/contacts/$id': typeof ApiPublicContactsIdRoute
+  '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
   '/api/public/alerts/$id/notify': typeof ApiPublicAlertsIdNotifyRoute
   '/api/public/alerts/$id/status': typeof ApiPublicAlertsIdStatusRoute
+  '/api/public/contacts/$id/resend-verification': typeof ApiPublicContactsIdResendVerificationRoute
+  '/api/public/contacts/$id/send-verification': typeof ApiPublicContactsIdSendVerificationRoute
+  '/api/public/contacts/$id/verify': typeof ApiPublicContactsIdVerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,6 +172,9 @@ export interface FileRouteTypes {
     | '/api/public/alerts/$id/dismiss'
     | '/api/public/alerts/$id/notify'
     | '/api/public/alerts/$id/status'
+    | '/api/public/contacts/$id/resend-verification'
+    | '/api/public/contacts/$id/send-verification'
+    | '/api/public/contacts/$id/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,6 +189,9 @@ export interface FileRouteTypes {
     | '/api/public/alerts/$id/dismiss'
     | '/api/public/alerts/$id/notify'
     | '/api/public/alerts/$id/status'
+    | '/api/public/contacts/$id/resend-verification'
+    | '/api/public/contacts/$id/send-verification'
+    | '/api/public/contacts/$id/verify'
   id:
     | '__root__'
     | '/'
@@ -170,6 +206,9 @@ export interface FileRouteTypes {
     | '/api/public/alerts/$id/dismiss'
     | '/api/public/alerts/$id/notify'
     | '/api/public/alerts/$id/status'
+    | '/api/public/contacts/$id/resend-verification'
+    | '/api/public/contacts/$id/send-verification'
+    | '/api/public/contacts/$id/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,15 +311,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAlertsIdStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/contacts/$id/resend-verification': {
+      id: '/api/public/contacts/$id/resend-verification'
+      path: '/resend-verification'
+      fullPath: '/api/public/contacts/$id/resend-verification'
+      preLoaderRoute: typeof ApiPublicContactsIdResendVerificationRouteImport
+      parentRoute: typeof ApiPublicContactsIdRoute
+    }
+    '/api/public/contacts/$id/send-verification': {
+      id: '/api/public/contacts/$id/send-verification'
+      path: '/send-verification'
+      fullPath: '/api/public/contacts/$id/send-verification'
+      preLoaderRoute: typeof ApiPublicContactsIdSendVerificationRouteImport
+      parentRoute: typeof ApiPublicContactsIdRoute
+    }
+    '/api/public/contacts/$id/verify': {
+      id: '/api/public/contacts/$id/verify'
+      path: '/verify'
+      fullPath: '/api/public/contacts/$id/verify'
+      preLoaderRoute: typeof ApiPublicContactsIdVerifyRouteImport
+      parentRoute: typeof ApiPublicContactsIdRoute
+    }
   }
 }
 
+interface ApiPublicContactsIdRouteChildren {
+  ApiPublicContactsIdResendVerificationRoute: typeof ApiPublicContactsIdResendVerificationRoute
+  ApiPublicContactsIdSendVerificationRoute: typeof ApiPublicContactsIdSendVerificationRoute
+  ApiPublicContactsIdVerifyRoute: typeof ApiPublicContactsIdVerifyRoute
+}
+
+const ApiPublicContactsIdRouteChildren: ApiPublicContactsIdRouteChildren = {
+  ApiPublicContactsIdResendVerificationRoute:
+    ApiPublicContactsIdResendVerificationRoute,
+  ApiPublicContactsIdSendVerificationRoute:
+    ApiPublicContactsIdSendVerificationRoute,
+  ApiPublicContactsIdVerifyRoute: ApiPublicContactsIdVerifyRoute,
+}
+
+const ApiPublicContactsIdRouteWithChildren =
+  ApiPublicContactsIdRoute._addFileChildren(ApiPublicContactsIdRouteChildren)
+
 interface ApiPublicContactsRouteChildren {
-  ApiPublicContactsIdRoute: typeof ApiPublicContactsIdRoute
+  ApiPublicContactsIdRoute: typeof ApiPublicContactsIdRouteWithChildren
 }
 
 const ApiPublicContactsRouteChildren: ApiPublicContactsRouteChildren = {
-  ApiPublicContactsIdRoute: ApiPublicContactsIdRoute,
+  ApiPublicContactsIdRoute: ApiPublicContactsIdRouteWithChildren,
 }
 
 const ApiPublicContactsRouteWithChildren =

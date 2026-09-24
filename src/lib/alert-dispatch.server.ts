@@ -38,9 +38,11 @@ export async function dispatchAlert(
     return { ok: false, status: 409, error: "Alert was dismissed and will not be sent" };
   }
 
+  // Only verified contacts are reached when an alert fires.
   const { data: contacts, error: contactsError } = await supabase
     .from("emergency_contacts")
     .select("id, name, phone, email")
+    .eq("verification_status", "verified")
     .order("created_at", { ascending: true });
 
   if (contactsError) return { ok: false, status: 400, error: contactsError.message };
