@@ -9,7 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as ApiPublicConsentRouteImport } from './routes/api/public/consent'
 import { Route as ApiPublicContactsRouteImport } from './routes/api/public/contacts'
 import { Route as ApiPublicAlertsTriggerRouteImport } from './routes/api/public/alerts.trigger'
@@ -29,9 +29,9 @@ import { Route as ApiPublicContactsIdResendVerificationRouteImport } from './rou
 import { Route as ApiPublicContactsIdSendVerificationRouteImport } from './routes/api/public/contacts.$id.send-verification'
 import { Route as ApiPublicContactsIdVerifyRouteImport } from './routes/api/public/contacts.$id.verify'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/_authenticated/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicConsentRoute = ApiPublicConsentRouteImport.update({
@@ -131,7 +131,7 @@ const ApiPublicContactsIdVerifyRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
   '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
@@ -152,7 +152,7 @@ export interface FileRoutesByFullPath {
   '/api/public/contacts/$id/verify': typeof ApiPublicContactsIdVerifyRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
   '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
@@ -174,7 +174,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/api/public/consent': typeof ApiPublicConsentRoute
   '/api/public/contacts': typeof ApiPublicContactsRouteWithChildren
   '/api/public/alerts/trigger': typeof ApiPublicAlertsTriggerRoute
@@ -197,7 +197,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
+    | '/home'
     | '/api/public/consent'
     | '/api/public/contacts'
     | '/api/public/alerts/trigger'
@@ -218,7 +218,7 @@ export interface FileRouteTypes {
     | '/api/public/contacts/$id/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/home'
     | '/api/public/consent'
     | '/api/public/contacts'
     | '/api/public/alerts/trigger'
@@ -239,7 +239,7 @@ export interface FileRouteTypes {
     | '/api/public/contacts/$id/verify'
   id:
     | '__root__'
-    | '/'
+    | '/_authenticated/home'
     | '/api/public/consent'
     | '/api/public/contacts'
     | '/api/public/alerts/trigger'
@@ -261,7 +261,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   ApiPublicConsentRoute: typeof ApiPublicConsentRoute
   ApiPublicContactsRoute: typeof ApiPublicContactsRouteWithChildren
   ApiPublicAlertsTriggerRoute: typeof ApiPublicAlertsTriggerRoute
@@ -280,11 +280,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/consent': {
@@ -445,7 +445,7 @@ const ApiPublicContactsRouteWithChildren =
   ApiPublicContactsRoute._addFileChildren(ApiPublicContactsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   ApiPublicConsentRoute: ApiPublicConsentRoute,
   ApiPublicContactsRoute: ApiPublicContactsRouteWithChildren,
   ApiPublicAlertsTriggerRoute: ApiPublicAlertsTriggerRoute,
