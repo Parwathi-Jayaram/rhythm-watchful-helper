@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { Check, ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
@@ -6,10 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/home")({
+  validateSearch: (search: Record<string, unknown>): { view?: "closed" } => (search.view === "closed" ? { view: "closed" } : {}),
   head: () => ({
     meta: [
       { title: "Rhythm — A quiet typing safety companion" },
@@ -253,8 +252,22 @@ function Alarm({ onCancel }: { onCancel: () => void }) {
   return <main className="grid min-h-screen place-items-center bg-alarm p-6 text-alarm-foreground"><section className="w-full max-w-xl text-center"><div className="mx-auto mb-7 grid h-16 w-16 place-items-center rounded-full border-2 border-alarm-foreground text-2xl font-bold">!</div><h1 className="text-5xl font-bold">Alerting your contacts</h1><div className="mx-auto mt-10 max-w-md divide-y divide-alarm-foreground/25 rounded-2xl border border-alarm-foreground/40 text-left">{[["Maya", "Delivered"], ["Alex", "Sending"]].map(([name, status]) => <div key={name} className="flex items-center justify-between p-5"><span className="font-semibold">{name}</span><span>{status}</span></div>)}</div><div className="relative mx-auto mt-10 h-16 max-w-md overflow-hidden rounded-2xl border-2 border-alarm-foreground"><div className={`absolute inset-y-0 left-0 bg-alarm-foreground/25 ${holding ? "w-full transition-[width] duration-[2000ms] ease-linear" : "w-0"}`} /><Button variant="ghost" className="relative h-full w-full rounded-none text-lg text-alarm-foreground hover:bg-transparent" onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && !holding) start(); }} onKeyUp={stop}>I'm okay — hold to cancel</Button></div><p className="mt-6 text-sm text-alarm-foreground/80">Alarm is playing and rising to full volume.</p></section></main>;
 }
 
+function LogoutButton() {
+  const navigate = useNavigate();
+  return (
+    <Button variant="quiet" className="fixed right-5 top-5 z-50 h-10 rounded-xl" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/login", replace: true }); }}>
+      Log out
+    </Button>
+  );
+}
+
 function Index() {
-  const [screen, setScreen] = useState<Screen>("setup");
+  const { view } = Route.useSearch();
+  return <><LogoutButton /><Screens initial={view === "closed" ? "closed" : "setup"} /></>;
+}
+
+function Screens({ initial }: { initial: Screen }) {
+  const [screen, setScreen] = useState<Screen>(initial);
   const [toast, setToast] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
   const backHome = useCallback(() => { setScreen("closed"); setToast("Thanks — glad you're okay"); window.setTimeout(() => setToast(""), 2600); }, []);
