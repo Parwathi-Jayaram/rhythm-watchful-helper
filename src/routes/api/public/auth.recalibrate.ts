@@ -27,8 +27,8 @@ export const Route = createFileRoute("/api/public/auth/recalibrate")({
         const parsed = schema.safeParse(await readJson(request));
         if (!parsed.success) return errorResponse("Invalid keystroke data");
 
-        const supabaseUrl = process.env.SUPABASE_URL!;
-        const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY!;
+        const supabaseUrl = process.env["SUPABASE_URL"]!;
+        const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
         const authHeader = request.headers.get("authorization");
 
         const response = await fetch(`${supabaseUrl}/functions/v1/keystroke-similarity/recalibrate`, {
