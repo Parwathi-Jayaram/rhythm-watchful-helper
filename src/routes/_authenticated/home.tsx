@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/home")({
-  validateSearch: (search: Record<string, unknown>): { view?: "closed" } => (search.view === "closed" ? { view: "closed" } : {}),
+  validateSearch: (search: Record<string, unknown>): { view?: "closed" } => (search["view"] === "closed" ? { view: "closed" } : {}),
   head: () => ({
     meta: [
       { title: "Rhythm — A quiet typing safety companion" },
