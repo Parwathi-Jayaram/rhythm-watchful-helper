@@ -28,12 +28,12 @@ type Screen = "setup" | "done" | "closed" | "soft" | "full" | "alarm";
 /** A contact row in the UI. `id` is set once it's saved to the database. */
 type Contact = {
   key: number;
-  id?: string;
+  id?: string | undefined;
   name: string;
   phone: string;
-  verificationStatus?: string;
-  warning?: string | null;
-  testCode?: string;
+  verificationStatus?: string | undefined;
+  warning?: string | null | undefined;
+  testCode?: string | undefined;
 };
 
 function fromSaved(saved: SavedContact, testCode?: string): Contact {
