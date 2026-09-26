@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { addContact, deleteContact, listContacts, type SavedContact } from "@/lib/contacts-api";
 
 export const Route = createFileRoute("/_authenticated/home")({
   validateSearch: (search: Record<string, unknown>): { view?: "closed" } =>
