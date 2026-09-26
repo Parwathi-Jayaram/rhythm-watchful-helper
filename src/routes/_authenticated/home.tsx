@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { addContact, deleteContact, listContacts, type SavedContact } from "@/lib/contacts-api";
+import { addContact, deleteContact, listContacts } from "@/lib/contacts-api";
 
 export const Route = createFileRoute("/_authenticated/home")({
   validateSearch: (search: Record<string, unknown>): { view?: "closed" } =>
@@ -51,52 +51,30 @@ const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25,
 
 /**
  * Inserts a contact into emergency_contacts linked to the currently
- * authenticated user. Uses the session user's id directly — never a
- * placeholder or hardcoded value — so row-level security on the table
- * enforces ownership.
+ * authenticated user. The user_id is set server-side from the bearer token
+ * in the session (requireUser), so row-level security enforces ownership.
  */
 async function saveContact(
   contact: Omit<Contact, "id" | "saved">,
 ): Promise<{ id: string } | { error: string }> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user?.id) {
-    return { error: "You must be signed in to add a contact." };
+  try {
+    const payload: { name: string; phone?: string } = { name: contact.name.trim() };
+    if (contact.phone.trim()) payload.phone = contact.phone.trim();
+    const { contact: saved } = await addContact(payload);
+    return { id: saved.id };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not save contact" };
   }
-  const { data, error } = await supabase
-    .from("emergency_contacts")
-    .insert({
-      user_id: session.user.id,
-      name: contact.name.trim(),
-      phone: contact.phone.trim() || null,
-      email: null,
-      relationship: null,
-      verification_status: contact.phone.trim() ? "pending" : "unverified",
-    })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
-  return { id: data.id };
 }
 
 /** Deletes a saved contact from emergency_contacts for the signed-in user. */
-async function deleteContact(contactId: string): Promise<{ ok: true } | { error: string }> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user?.id) {
-    return { error: "You must be signed in to delete a contact." };
+async function deleteContactRow(contactId: string): Promise<{ ok: true } | { error: string }> {
+  try {
+    await deleteContact(contactId);
+    return { ok: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not remove contact" };
   }
-  const { error } = await supabase
-    .from("emergency_contacts")
-    .delete()
-    .eq("id", contactId)
-    .eq("user_id", session.user.id);
-  if (error) return { error: error.message };
-  return { ok: true };
 }
 
 function RhythmBars({ active = false }: { active?: boolean }) {
@@ -469,7 +447,7 @@ function Closed({
     );
   };
   const removeContact = async (id: string) => {
-    const result = await deleteContact(id);
+    const result = await deleteContactRow(id);
     if ("error" in result) {
       setSaveError(result.error);
       return;
@@ -787,32 +765,24 @@ function Index() {
 }
 
 /**
- * Fetches only the contacts belonging to the currently authenticated user
- * (WHERE user_id = session user id). Row-level security on emergency_contacts
- * enforces the same ownership boundary server-side.
+ * Fetches only the contacts belonging to the currently authenticated user.
+ * The server endpoint filters `WHERE user_id = current user`, and row-level
+ * security on emergency_contacts enforces the same ownership boundary.
  */
 async function loadContacts(): Promise<Contact[]> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError || !session?.user?.id) return [];
-  const { data, error } = await supabase
-    .from("emergency_contacts")
-    .select("id, name, phone")
-    .eq("user_id", session.user.id)
-    .order("created_at", { ascending: true });
-  if (error) {
-    console.error("Failed to load contacts:", error.message);
+  try {
+    const rows = await listContacts();
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      phone: row.phone ?? "",
+      saved: true,
+      status: "Not tested" as const,
+    }));
+  } catch (err) {
+    console.error("Failed to load contacts:", err instanceof Error ? err.message : err);
     return [];
   }
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    phone: row.phone ?? "",
-    saved: true,
-    status: "Not tested" as const,
-  }));
 }
 
 function Screens({ initial }: { initial: Screen }) {
