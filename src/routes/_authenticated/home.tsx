@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { addContact, deleteContact, listContacts, type SavedContact } from "@/lib/contacts-api";
 
 export const Route = createFileRoute("/_authenticated/home")({
   validateSearch: (search: Record<string, unknown>): { view?: "closed" } => (search["view"] === "closed" ? { view: "closed" } : {}),
@@ -23,7 +24,29 @@ export const Route = createFileRoute("/_authenticated/home")({
 });
 
 type Screen = "setup" | "done" | "closed" | "soft" | "full" | "alarm";
-type Contact = { id: number; name: string; phone: string; status: "Not tested" | "Sent" | "Delivered" };
+
+/** A contact row in the UI. `id` is set once it's saved to the database. */
+type Contact = {
+  key: number;
+  id?: string | undefined;
+  name: string;
+  phone: string;
+  verificationStatus?: string | undefined;
+  warning?: string | null | undefined;
+  testCode?: string | undefined;
+};
+
+function fromSaved(saved: SavedContact, testCode?: string): Contact {
+  return {
+    key: Date.now() + Math.floor(Math.random() * 1000),
+    id: saved.id,
+    name: saved.name,
+    phone: saved.phone ?? "",
+    verificationStatus: saved.verification_status,
+    warning: saved.warning,
+    testCode,
+  };
+}
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
 
@@ -70,10 +93,22 @@ function ProgressRing({ value, label, size = 176 }: { value: number; label: stri
   );
 }
 
-function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; onComplete: () => void }) {
+function VerificationBadge({ contact }: { contact: Contact }) {
+  if (!contact.id) return null;
+  const verified = contact.verificationStatus === "verified";
+  return (
+    <span className={`rounded-full px-3 py-1 text-sm font-medium ${verified ? "bg-secondary text-success" : "bg-muted text-muted-foreground"}`}>
+      {verified ? "Verified" : "Not verified"}
+    </span>
+  );
+}
+
+function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; onComplete: () => Promise<string | null> }) {
   const [step, setStep] = useState(1);
   const [consent, setConsent] = useState(false);
   const [learning, setLearning] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (step !== 2 || learning >= 8) return;
@@ -81,13 +116,16 @@ function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; set
     return () => window.clearInterval(timer);
   }, [step, learning]);
 
-  const updateContact = (id: number, key: "name" | "phone", value: string) => {
-    setContacts((all) => all.map((contact) => contact.id === id ? { ...contact, [key]: value } : contact));
+  const updateContact = (key: number, field: "name" | "phone", value: string) => {
+    setContacts((all) => all.map((contact) => contact.key === key ? { ...contact, [field]: value } : contact));
   };
 
-  const testContact = (id: number) => {
-    setContacts((all) => all.map((contact) => contact.id === id ? { ...contact, status: "Sent" } : contact));
-    window.setTimeout(() => setContacts((all) => all.map((contact) => contact.id === id ? { ...contact, status: "Delivered" } : contact)), 1200);
+  const finish = async () => {
+    setSaving(true);
+    setError("");
+    const failure = await onComplete();
+    setSaving(false);
+    if (failure) setError(failure);
   };
 
   return (
@@ -138,20 +176,20 @@ function Setup({ contacts, setContacts, onComplete }: { contacts: Contact[]; set
               <p className="mt-4 text-lg text-muted-foreground">Choose someone you trust to receive an alert.</p>
               <div className="mt-8 space-y-4">
                 {contacts.map((contact) => (
-                  <div key={contact.id} className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
-                    <label className="text-sm font-medium">Name<Input className="mt-2 h-11 rounded-lg text-base" value={contact.name} onChange={(event) => updateContact(contact.id, "name", event.target.value)} /></label>
-                    <label className="text-sm font-medium">Phone number<Input className="mt-2 h-11 rounded-lg text-base" value={contact.phone} onChange={(event) => updateContact(contact.id, "phone", event.target.value)} /></label>
+                  <div key={contact.key} className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                    <label className="text-sm font-medium">Name<Input className="mt-2 h-11 rounded-lg text-base" value={contact.name} onChange={(event) => updateContact(contact.key, "name", event.target.value)} /></label>
+                    <label className="text-sm font-medium">Phone number<Input className="mt-2 h-11 rounded-lg text-base" value={contact.phone} onChange={(event) => updateContact(contact.key, "phone", event.target.value)} /></label>
                     <div className="flex items-center gap-3 md:pb-0.5">
-                      <Button variant="quiet" className="h-10 rounded-lg" onClick={() => testContact(contact.id)}>Send test alert</Button>
-                      <span className={`rounded-full px-3 py-1 text-sm font-medium ${contact.status === "Delivered" ? "bg-secondary text-success" : "bg-muted text-muted-foreground"}`}>{contact.status}</span>
+                      <VerificationBadge contact={contact} />
                     </div>
                   </div>
                 ))}
               </div>
-              {contacts.length < 3 && <Button variant="link" className="mt-3 px-0 text-base" onClick={() => setContacts((all) => [...all, { id: Date.now(), name: "", phone: "", status: "Not tested" }])}><Plus />Add another contact</Button>}
+              {contacts.length < 3 && <Button variant="link" className="mt-3 px-0 text-base" onClick={() => setContacts((all) => [...all, { key: Date.now(), name: "", phone: "" }])}><Plus />Add another contact</Button>}
+              {error && <p className="mt-4 rounded-xl bg-muted p-4 text-sm font-medium text-destructive">{error}</p>}
               <div className="mt-8 flex items-center gap-3">
                 <Button variant="quiet" size="lg" className="h-12 rounded-xl" onClick={() => setStep(2)}><ChevronLeft />Back</Button>
-                <Button variant="calm" size="lg" className="h-12 rounded-xl px-7 text-base" onClick={onComplete}>Finish setup</Button>
+                <Button variant="calm" size="lg" className="h-12 rounded-xl px-7 text-base" disabled={saving} onClick={finish}>{saving ? "Saving…" : "Finish setup"}</Button>
               </div>
             </section>
           )}
@@ -180,13 +218,45 @@ function Done({ onClose, contactCount }: { onClose: () => void; contactCount: nu
   );
 }
 
-function Closed({ contacts, setContacts, toast }: { contacts: Contact[]; setContacts: Dispatch<SetStateAction<Contact[]>>; toast: string }) {
-  const updateContact = (id: number, key: "name" | "phone", value: string) => {
-    setContacts((all) => all.map((contact) => contact.id === id ? { ...contact, [key]: value } : contact));
+function Closed({
+  contacts,
+  setContacts,
+  toast,
+  onSave,
+  onRemove,
+  loading,
+}: {
+  contacts: Contact[];
+  setContacts: Dispatch<SetStateAction<Contact[]>>;
+  toast: string;
+  onSave: (key: number) => Promise<string | null>;
+  onRemove: (contact: Contact) => Promise<string | null>;
+  loading: boolean;
+}) {
+  const [savingKey, setSavingKey] = useState<number | null>(null);
+  const [removingKey, setRemovingKey] = useState<number | null>(null);
+  const [error, setError] = useState("");
+
+  const updateContact = (key: number, field: "name" | "phone", value: string) => {
+    setContacts((all) => all.map((contact) => contact.key === key ? { ...contact, [field]: value } : contact));
   };
-  const removeContact = (id: number) => {
-    setContacts((all) => all.filter((contact) => contact.id !== id));
+
+  const save = async (key: number) => {
+    setSavingKey(key);
+    setError("");
+    const failure = await onSave(key);
+    setSavingKey(null);
+    if (failure) setError(failure);
   };
+
+  const remove = async (contact: Contact) => {
+    setRemovingKey(contact.key);
+    setError("");
+    const failure = await onRemove(contact);
+    setRemovingKey(null);
+    if (failure) setError(failure);
+  };
+
   return (
     <main className="grid min-h-screen place-items-center bg-background p-5">
       <section className="w-full max-w-[420px] rounded-[20px] border border-border bg-card p-7">
@@ -194,18 +264,42 @@ function Closed({ contacts, setContacts, toast }: { contacts: Contact[]; setCont
         <h2 className="mt-7 text-2xl font-semibold">Emergency contacts</h2>
         <p className="mt-1 text-sm text-muted-foreground">The people Rhythm alerts if you need help.</p>
         <div className="mt-5 space-y-3">
-          {contacts.map((contact) => (
-            <div key={contact.id} className="grid gap-3 rounded-xl border border-border p-4">
-              <div className="flex items-start justify-between gap-3">
-                <label className="flex-1 text-sm font-medium">Name<Input className="mt-2 h-10 rounded-lg text-base" value={contact.name} onChange={(event) => updateContact(contact.id, "name", event.target.value)} /></label>
-                <Button variant="ghost" size="icon" className="mt-6 shrink-0 rounded-full text-muted-foreground hover:text-destructive" aria-label={`Remove ${contact.name || "contact"}`} onClick={() => removeContact(contact.id)}><Trash2 /></Button>
-              </div>
-              <label className="text-sm font-medium">Phone number<Input className="mt-2 h-10 rounded-lg text-base" value={contact.phone} onChange={(event) => updateContact(contact.id, "phone", event.target.value)} /></label>
+          {loading && <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">Loading your contacts…</p>}
+          {!loading && contacts.map((contact) => (
+            <div key={contact.key} className="grid gap-3 rounded-xl border border-border p-4">
+              {contact.id ? (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold">{contact.name}</p>
+                      <p className="truncate text-sm text-muted-foreground">{contact.phone}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="shrink-0 rounded-full text-muted-foreground hover:text-destructive" aria-label={`Remove ${contact.name || "contact"}`} disabled={removingKey === contact.key} onClick={() => remove(contact)}><Trash2 /></Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <VerificationBadge contact={contact} />
+                    {contact.testCode && <span className="text-xs text-muted-foreground">Test code: {contact.testCode}</span>}
+                  </div>
+                  {contact.warning && <p className="text-sm text-muted-foreground">{contact.warning}</p>}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <label className="flex-1 text-sm font-medium">Name<Input className="mt-2 h-10 rounded-lg text-base" value={contact.name} onChange={(event) => updateContact(contact.key, "name", event.target.value)} /></label>
+                    <Button variant="ghost" size="icon" className="mt-6 shrink-0 rounded-full text-muted-foreground hover:text-destructive" aria-label={`Remove ${contact.name || "contact"}`} onClick={() => remove(contact)}><Trash2 /></Button>
+                  </div>
+                  <label className="text-sm font-medium">Phone number<Input className="mt-2 h-10 rounded-lg text-base" value={contact.phone} onChange={(event) => updateContact(contact.key, "phone", event.target.value)} /></label>
+                  <Button variant="calm" className="h-10 rounded-lg" disabled={savingKey === contact.key || !contact.name.trim() || !contact.phone.trim()} onClick={() => save(contact.key)}>
+                    {savingKey === contact.key ? "Saving…" : "Save contact"}
+                  </Button>
+                </>
+              )}
             </div>
           ))}
-          {contacts.length === 0 && <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">No contacts yet. Add someone you trust.</p>}
-          {contacts.length < 3 && <Button variant="link" className="px-0 text-base" onClick={() => setContacts((all) => [...all, { id: Date.now(), name: "", phone: "", status: "Not tested" }])}><Plus />Add another contact</Button>}
+          {!loading && contacts.length === 0 && <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">No contacts yet. Add someone you trust.</p>}
+          {contacts.length < 3 && <Button variant="link" className="px-0 text-base" onClick={() => setContacts((all) => [...all, { key: Date.now(), name: "", phone: "" }])}><Plus />Add another contact</Button>}
         </div>
+        {error && <p className="mt-4 rounded-xl bg-muted p-4 text-sm font-medium text-destructive">{error}</p>}
         <p className="mt-7 text-sm text-muted-foreground">Rhythm is watching quietly in the background.</p>
       </section>
       {toast && <div className="toast-enter fixed bottom-8 left-1/2 -translate-x-1/2 rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background">{toast}</div>}
@@ -269,12 +363,79 @@ function Index() {
 function Screens({ initial }: { initial: Screen }) {
   const [screen, setScreen] = useState<Screen>(initial);
   const [toast, setToast] = useState("");
-  const [contacts, setContacts] = useState<Contact[]>([{ id: 1, name: "Maya", phone: "+1 555 014 7280", status: "Not tested" }]);
-  const backHome = useCallback(() => { setScreen("closed"); setToast("Thanks — glad you're okay"); window.setTimeout(() => setToast(""), 2600); }, []);
-  if (screen === "setup") return <Setup contacts={contacts} setContacts={setContacts} onComplete={() => setScreen("done")} />;
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(true);
+
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2600);
+  }, []);
+
+  const reloadContacts = useCallback(async () => {
+    try {
+      const saved = await listContacts();
+      setContacts(saved.map((contact) => fromSaved(contact)));
+    } catch {
+      // Signed-out or network failure — the gate handles sign-in; keep the list as-is.
+    } finally {
+      setLoadingContacts(false);
+    }
+  }, []);
+
+  useEffect(() => { void reloadContacts(); }, [reloadContacts]);
+
+  /** Save every unsaved contact row to the database. Returns an error message or null. */
+  const saveNewContacts = useCallback(async (): Promise<string | null> => {
+    const unsaved = contacts.filter((contact) => !contact.id && contact.name.trim() && contact.phone.trim());
+    try {
+      for (const contact of unsaved) {
+        await addContact({ name: contact.name.trim(), phone: contact.phone.trim() });
+      }
+    } catch (err) {
+      return err instanceof Error ? err.message : "Could not save contacts";
+    }
+    await reloadContacts();
+    return null;
+  }, [contacts, reloadContacts]);
+
+  const saveOne = useCallback(async (key: number): Promise<string | null> => {
+    const contact = contacts.find((item) => item.key === key);
+    if (!contact) return null;
+    try {
+      const { contact: saved, testCode } = await addContact({ name: contact.name.trim(), phone: contact.phone.trim() });
+      setContacts((all) => all.map((item) => item.key === key ? { ...fromSaved(saved, testCode), key } : item));
+      showToast("Contact saved");
+      return null;
+    } catch (err) {
+      return err instanceof Error ? err.message : "Could not save contact";
+    }
+  }, [contacts, showToast]);
+
+  const removeOne = useCallback(async (contact: Contact): Promise<string | null> => {
+    if (!contact.id) {
+      setContacts((all) => all.filter((item) => item.key !== contact.key));
+      return null;
+    }
+    try {
+      await deleteContact(contact.id);
+      setContacts((all) => all.filter((item) => item.key !== contact.key));
+      showToast("Contact removed");
+      return null;
+    } catch (err) {
+      return err instanceof Error ? err.message : "Could not remove contact";
+    }
+  }, [showToast]);
+
+  const backHome = useCallback(() => { setScreen("closed"); showToast("Thanks — glad you're okay"); }, [showToast]);
+
+  if (screen === "setup") return <Setup contacts={contacts} setContacts={setContacts} onComplete={async () => {
+    const failure = await saveNewContacts();
+    if (!failure) setScreen("done");
+    return failure;
+  }} />;
   if (screen === "soft") return <SoftCheckIn onOkay={backHome} onMinute={() => setScreen("full")} onExpire={() => setScreen("full")} />;
   if (screen === "full") return <FullCheckIn onOkay={backHome} onHelp={() => setScreen("alarm")} onExpire={() => setScreen("alarm")} />;
   if (screen === "alarm") return <Alarm onCancel={backHome} />;
-  if (screen === "done") return <Done contactCount={contacts.length} onClose={() => setScreen("closed")} />;
-  return <Closed contacts={contacts} setContacts={setContacts} toast={toast} />;
+  if (screen === "done") return <Done contactCount={contacts.filter((contact) => contact.id).length} onClose={() => setScreen("closed")} />;
+  return <Closed contacts={contacts} setContacts={setContacts} toast={toast} onSave={saveOne} onRemove={removeOne} loading={loadingContacts} />;
 }
