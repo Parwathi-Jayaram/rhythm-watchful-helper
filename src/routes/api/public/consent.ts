@@ -20,10 +20,9 @@ export const Route = createFileRoute("/api/public/consent")({
         if (!parsed.success) return errorResponse("consent_given and consent_version required");
 
         const { data, error } = await auth.supabase
-          .from("profiles")
-          .upsert({
-            id: auth.userId,
-            email: auth.email ?? null,
+          .from("consents")
+          .insert({
+            user_id: auth.userId,
             consent_given: parsed.data.consent_given,
             consent_version: parsed.data.consent_version,
             consent_timestamp: parsed.data.consent_timestamp ?? new Date().toISOString(),
@@ -32,7 +31,7 @@ export const Route = createFileRoute("/api/public/consent")({
           .single();
 
         if (error) return errorResponse(error.message, 400);
-        return json(data);
+        return json(data, 201);
       },
     },
   },
