@@ -21,7 +21,9 @@ export type Database = {
           created_at: string
           delivery_status: Json
           id: string
+          keystroke_score: number | null
           notification_sent_at: string | null
+          sensor_score: number | null
           triggered_at: string
           user_id: string
           user_response: string | null
@@ -32,7 +34,9 @@ export type Database = {
           created_at?: string
           delivery_status?: Json
           id?: string
+          keystroke_score?: number | null
           notification_sent_at?: string | null
+          sensor_score?: number | null
           triggered_at?: string
           user_id: string
           user_response?: string | null
@@ -43,10 +47,39 @@ export type Database = {
           created_at?: string
           delivery_status?: Json
           id?: string
+          keystroke_score?: number | null
           notification_sent_at?: string | null
+          sensor_score?: number | null
           triggered_at?: string
           user_id?: string
           user_response?: string | null
+        }
+        Relationships: []
+      }
+      consents: {
+        Row: {
+          consent_given: boolean
+          consent_timestamp: string
+          consent_version: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          consent_given: boolean
+          consent_timestamp?: string
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          consent_given?: boolean
+          consent_timestamp?: string
+          consent_version?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
