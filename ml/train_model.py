@@ -84,15 +84,33 @@ def normalize(data, mean=None, std=None):
         std = data.std(axis=0) + 1e-6
     return (data - mean) / std, mean, std
 
+def load_real_data(csv_path):
+    import csv as csv_module
+    rows = []
+    with open(csv_path, newline="") as f:
+        reader = csv_module.DictReader(f)
+        for row in reader:
+            rows.append([
+                float(row["avg_dwell"]),
+                float(row["avg_flight"]),
+                float(row["typing_speed"]),
+                float(row["error_rate"]),
+                float(row["dwell_var"]),
+                float(row["flight_var"]),
+                float(row["grip"]),
+                float(row["grip_asym"]),
+            ])
+    return np.array(rows, dtype=np.float32)
+
 
 def train():
     # 1. Get data (synthetic for now)
-    raw_data = generate_synthetic_baseline(n_samples=500)
+    raw_data = load_real_data("typing_data.csv")
     data, mean, std = normalize(raw_data)
     tensor_data = torch.tensor(data, dtype=torch.float32)
 
     # 2. Split train/val
-    n_val = 50
+    n_val = 15
     train_data = tensor_data[:-n_val]
     val_data = tensor_data[-n_val:]
 
