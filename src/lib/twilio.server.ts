@@ -33,10 +33,14 @@ export async function sendSms(to: string, body: string): Promise<SmsResult> {
     return { mode: "live", error: "Missing sender number (TWILIO_FROM_NUMBER)" };
   }
 
-  const res = await fetch(url, {
+    const res = await fetch(url, {
     method: "POST",
     headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
+    body: new URLSearchParams({
+      To: `whatsapp:${to}`,
+      From: `whatsapp:${from}`,
+      Body: body,
+    }),
   });
   const text = await res.text();
   if (!res.ok) {
