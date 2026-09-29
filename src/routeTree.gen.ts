@@ -26,6 +26,7 @@ import { Route as ApiPublicAuthVerifyRouteImport } from './routes/api/public/aut
 import { Route as ApiPublicBaselinesSyncRouteImport } from './routes/api/public/baselines.sync'
 import { Route as ApiPublicConsentStatusRouteImport } from './routes/api/public/consent.status'
 import { Route as ApiPublicContactsIdRouteImport } from './routes/api/public/contacts.$id'
+import { Route as ApiPublicHooksAlertSmsRouteImport } from './routes/api/public/hooks/alert-sms'
 import { Route as ApiPublicMonitoringLogRouteImport } from './routes/api/public/monitoring.log'
 import { Route as ApiPublicUserProfileRouteImport } from './routes/api/public/user.profile'
 import { Route as ApiPublicAlertsIdDismissRouteImport } from './routes/api/public/alerts.$id.dismiss'
@@ -120,6 +121,11 @@ const ApiPublicContactsIdRoute = ApiPublicContactsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiPublicContactsRoute,
 } as any)
+const ApiPublicHooksAlertSmsRoute = ApiPublicHooksAlertSmsRouteImport.update({
+  id: '/api/public/hooks/alert-sms',
+  path: '/api/public/hooks/alert-sms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMonitoringLogRoute = ApiPublicMonitoringLogRouteImport.update({
   id: '/api/public/monitoring/log',
   path: '/api/public/monitoring/log',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/consent/status': typeof ApiPublicConsentStatusRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
+  '/api/public/hooks/alert-sms': typeof ApiPublicHooksAlertSmsRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/user/profile': typeof ApiPublicUserProfileRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/consent/status': typeof ApiPublicConsentStatusRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
+  '/api/public/hooks/alert-sms': typeof ApiPublicHooksAlertSmsRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/user/profile': typeof ApiPublicUserProfileRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/api/public/baselines/sync': typeof ApiPublicBaselinesSyncRoute
   '/api/public/consent/status': typeof ApiPublicConsentStatusRoute
   '/api/public/contacts/$id': typeof ApiPublicContactsIdRouteWithChildren
+  '/api/public/hooks/alert-sms': typeof ApiPublicHooksAlertSmsRoute
   '/api/public/monitoring/log': typeof ApiPublicMonitoringLogRoute
   '/api/public/user/profile': typeof ApiPublicUserProfileRoute
   '/api/public/alerts/$id/dismiss': typeof ApiPublicAlertsIdDismissRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/api/public/baselines/sync'
     | '/api/public/consent/status'
     | '/api/public/contacts/$id'
+    | '/api/public/hooks/alert-sms'
     | '/api/public/monitoring/log'
     | '/api/public/user/profile'
     | '/api/public/alerts/$id/dismiss'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/public/baselines/sync'
     | '/api/public/consent/status'
     | '/api/public/contacts/$id'
+    | '/api/public/hooks/alert-sms'
     | '/api/public/monitoring/log'
     | '/api/public/user/profile'
     | '/api/public/alerts/$id/dismiss'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/public/baselines/sync'
     | '/api/public/consent/status'
     | '/api/public/contacts/$id'
+    | '/api/public/hooks/alert-sms'
     | '/api/public/monitoring/log'
     | '/api/public/user/profile'
     | '/api/public/alerts/$id/dismiss'
@@ -341,6 +353,7 @@ export interface RootRouteChildren {
   ApiPublicAuthSignupRoute: typeof ApiPublicAuthSignupRoute
   ApiPublicAuthVerifyRoute: typeof ApiPublicAuthVerifyRoute
   ApiPublicBaselinesSyncRoute: typeof ApiPublicBaselinesSyncRoute
+  ApiPublicHooksAlertSmsRoute: typeof ApiPublicHooksAlertSmsRoute
   ApiPublicMonitoringLogRoute: typeof ApiPublicMonitoringLogRoute
   ApiPublicUserProfileRoute: typeof ApiPublicUserProfileRoute
 }
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/contacts/$id'
       preLoaderRoute: typeof ApiPublicContactsIdRouteImport
       parentRoute: typeof ApiPublicContactsRoute
+    }
+    '/api/public/hooks/alert-sms': {
+      id: '/api/public/hooks/alert-sms'
+      path: '/api/public/hooks/alert-sms'
+      fullPath: '/api/public/hooks/alert-sms'
+      preLoaderRoute: typeof ApiPublicHooksAlertSmsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/monitoring/log': {
       id: '/api/public/monitoring/log'
@@ -607,6 +627,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAuthSignupRoute: ApiPublicAuthSignupRoute,
   ApiPublicAuthVerifyRoute: ApiPublicAuthVerifyRoute,
   ApiPublicBaselinesSyncRoute: ApiPublicBaselinesSyncRoute,
+  ApiPublicHooksAlertSmsRoute: ApiPublicHooksAlertSmsRoute,
   ApiPublicMonitoringLogRoute: ApiPublicMonitoringLogRoute,
   ApiPublicUserProfileRoute: ApiPublicUserProfileRoute,
 }
