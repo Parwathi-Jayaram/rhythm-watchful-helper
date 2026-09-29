@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
+import { sendSms } from "./twilio.server";
 
 export const CODE_TTL_MS = 15 * 60 * 1000;
 export const PENDING_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 30 * 1000;
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 async function sha256(value: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
@@ -44,31 +44,6 @@ export function publicContact(c: ContactRow) {
     verified_at: c.verified_at,
     warning: status === "verified" ? null : "Not verified — this contact won't receive alerts yet",
   };
-}
-
-async function sendSms(to: string, body: string): Promise<{ mode: "live" | "test"; error?: string }> {
-  const lovableKey = process.env["LOVABLE_API_KEY"];
-  const twilioKey = process.env["TWILIO_API_KEY"];
-  const from = process.env["TWILIO_FROM_NUMBER"];
-  if (!lovableKey || !twilioKey || !from) {
-    console.log(`[verification:test-mode] SMS to ${to}: ${body}`);
-    return { mode: "test" };
-  }
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": twilioKey,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`Twilio send failed [${res.status}]: ${text}`);
-    return { mode: "live", error: `SMS provider error [${res.status}]: ${text}` };
-  }
-  return { mode: "live" };
 }
 
 export async function sendVerification(
