@@ -1,7 +1,8 @@
 # Roadmap
 
-- [x] User A / User B contact isolation verified (B sees only own contacts; cannot delete A's)
-- [x] `consents` table + POST /consent, GET /consent/status
-- [x] `alerts` table extended (keystroke_score, sensor_score) + POST /alerts, GET /alerts
-- [x] Tested: consent + alert created as logged-in user, retrievable via GET, 401 without token
-- [ ] Pending: wire real SMS (Twilio) + email (Resend) when accounts/keys are provided
+- [x] User A / User B contact isolation verified
+- [x] consents + alerts tables and endpoints
+- [x] Auto SMS on new alert: DB trigger -> /api/public/hooks/alert-sms -> Twilio (duplicate-safe)
+- [ ] Blocked: Twilio sender number (TWILIO_FROM_NUMBER) — connected Twilio account lists no phone numbers; waiting on user
+- [ ] Publish/confirm hook URL works, then end-to-end test with live_monitor_v2.py
+- [ ] Email via Resend (later)
