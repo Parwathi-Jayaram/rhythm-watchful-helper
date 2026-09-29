@@ -238,7 +238,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      verify_alert_hook_secret: { Args: { _secret: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
