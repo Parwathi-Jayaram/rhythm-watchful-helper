@@ -50,3 +50,29 @@ export async function deleteContact(id: string): Promise<void> {
     throw new Error(body.error ?? "Could not remove contact");
   }
 }
+
+export async function sendVerification(
+  id: string,
+): Promise<{ ok: true; testCode?: string } | { ok: false; error: string }> {
+  const res = await fetch(`/api/public/contacts/${id}/send-verification`, {
+    method: "POST",
+    headers: await authHeaders(),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: body.error ?? "Could not send verification" };
+  return { ok: true, testCode: body.verification?.test_code };
+}
+
+export async function verifyContactCode(
+  id: string,
+  code: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const res = await fetch(`/api/public/contacts/${id}/verify`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({ code }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: body.error ?? "Could not verify code" };
+  return { ok: true };
+}

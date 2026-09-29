@@ -13,7 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { addContact, deleteContact, listContacts } from "@/lib/contacts-api";
+import {
+  addContact,
+  deleteContact,
+  listContacts,
+  sendVerification,
+  verifyContactCode,
+} from "@/lib/contacts-api";
 
 export const Route = createFileRoute("/_authenticated/home")({
   validateSearch: (search: Record<string, unknown>): { view?: "closed" } =>
@@ -45,6 +51,7 @@ type Contact = {
   phone: string;
   status: "Not tested" | "Sent" | "Delivered";
   saved?: boolean;
+  verificationStatus?: "verified" | "pending" | "unverified";
 };
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
@@ -198,7 +205,11 @@ function Setup({
       setSaveError(result.error);
       return;
     }
-    setContacts((all) => all.map((c) => (c.id === contact.id ? { ...c, saved: true } : c)));
+    // Replace the local placeholder row with the real saved contact so the
+    // id is the database UUID (emergency_contacts.id is uuid).
+    setContacts((all) =>
+      all.map((c) => (c.id === contact.id ? { ...c, id: result.id, saved: true } : c)),
+    );
   };
 
   /** Saves every unsaved contact with a name before completing setup. */
@@ -440,6 +451,9 @@ function Closed({
   toast: string;
 }) {
   const [saving, setSaving] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [saveError, setSaveError] = useState("");
   const updateContact = (id: string, key: "name" | "phone", value: string) => {
     setContacts((all) =>
@@ -447,10 +461,14 @@ function Closed({
     );
   };
   const removeContact = async (id: string) => {
-    const result = await deleteContactRow(id);
-    if ("error" in result) {
-      setSaveError(result.error);
-      return;
+    // Only rows saved to the database have a real UUID; local placeholder
+    // rows (id starts with "local-") are removed from state only.
+    if (!id.startsWith("local-")) {
+      const result = await deleteContactRow(id);
+      if ("error" in result) {
+        setSaveError(result.error);
+        return;
+      }
     }
     setContacts((all) => all.filter((contact) => contact.id !== id));
   };
@@ -464,7 +482,47 @@ function Closed({
       setSaveError(result.error);
       return;
     }
-    setContacts((all) => all.map((c) => (c.id === contact.id ? { ...c, saved: true } : c)));
+    setContacts((all) =>
+      all.map((c) => (c.id === contact.id ? { ...c, id: result.id, saved: true } : c)),
+    );
+  };
+  /** Sends a verification code to the contact's phone. */
+  const startVerification = async (contact: Contact) => {
+    if (!contact.saved || !contact.phone.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      await sendVerification(contact.id);
+      setContacts((all) =>
+        all.map((c) => (c.id === contact.id ? { ...c, verificationStatus: "pending" } : c)),
+      );
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Could not send verification");
+    } finally {
+      setSaving(false);
+    }
+  };
+  /** Confirms the code the contact received. */
+  const confirmVerification = async (contact: Contact) => {
+    if (!code.trim()) return;
+    setSaving(true);
+    setCodeError("");
+    try {
+      const result = await verifyContactCode(contact.id, code.trim());
+      if (result.ok) {
+        setContacts((all) =>
+          all.map((c) => (c.id === contact.id ? { ...c, verificationStatus: "verified" } : c)),
+        );
+        setVerifyingId(null);
+        setCode("");
+      } else {
+        setCodeError(result.error);
+      }
+    } catch (err) {
+      setCodeError(err instanceof Error ? err.message : "Could not verify code");
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <main className="grid min-h-screen place-items-center bg-background p-5">
@@ -504,15 +562,72 @@ function Closed({
                   onChange={(event) => updateContact(contact.id, "phone", event.target.value)}
                 />
               </label>
-              <Button
-                variant="calm"
-                size="sm"
-                className="h-9 rounded-lg px-3 text-xs"
-                disabled={saving || !contact.name.trim() || contact.saved}
-                onClick={() => saveContactRow(contact)}
-              >
-                {contact.saved ? "Saved" : "Save contact"}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="calm"
+                  size="sm"
+                  className="h-9 rounded-lg px-3 text-xs"
+                  disabled={saving || !contact.name.trim() || contact.saved}
+                  onClick={() => saveContactRow(contact)}
+                >
+                  {contact.saved ? "Saved" : "Save contact"}
+                </Button>
+                {contact.verificationStatus === "verified" ? (
+                  <span className="flex items-center gap-1 rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">
+                    <Check className="h-3.5 w-3.5" /> Verified
+                  </span>
+                ) : contact.saved && contact.phone.trim() ? (
+                  verifyingId === contact.id ? (
+                    <>
+                      <Input
+                        className="h-9 w-28 rounded-lg text-xs"
+                        placeholder="6-digit code"
+                        inputMode="numeric"
+                        value={code}
+                        onChange={(event) => setCode(event.target.value)}
+                      />
+                      <Button
+                        variant="calm"
+                        size="sm"
+                        className="h-9 rounded-lg px-3 text-xs"
+                        disabled={saving || !code.trim()}
+                        onClick={() => confirmVerification(contact)}
+                      >
+                        Verify
+                      </Button>
+                      <Button
+                        variant="quiet"
+                        size="sm"
+                        className="h-9 rounded-lg px-3 text-xs"
+                        disabled={saving}
+                        onClick={() => startVerification(contact)}
+                      >
+                        Resend
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="quiet"
+                      size="sm"
+                      className="h-9 rounded-lg px-3 text-xs"
+                      disabled={saving}
+                      onClick={() => {
+                        setVerifyingId(contact.id);
+                        setCode("");
+                        setCodeError("");
+                        startVerification(contact);
+                      }}
+                    >
+                      Verify contact
+                    </Button>
+                  )
+                ) : null}
+              </div>
+              {verifyingId === contact.id && codeError && (
+                <p role="alert" className="text-xs text-destructive">
+                  {codeError}
+                </p>
+              )}
             </div>
           ))}
           {contacts.length === 0 && (
@@ -778,6 +893,12 @@ async function loadContacts(): Promise<Contact[]> {
       phone: row.phone ?? "",
       saved: true,
       status: "Not tested" as const,
+      verificationStatus:
+        row.verification_status === "verified"
+          ? "verified"
+          : row.verification_status === "pending"
+            ? "pending"
+            : "unverified",
     }));
   } catch (err) {
     console.error("Failed to load contacts:", err instanceof Error ? err.message : err);
