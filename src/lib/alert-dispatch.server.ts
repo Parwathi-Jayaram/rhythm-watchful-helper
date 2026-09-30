@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/integrations/supabase/types";
-import { E164, sendSms } from "./twilio.server";
+import { E164 } from "./twilio.server";
+import { sendEmail } from "./email.server";
 
 export type DeliveryAttempt = {
   contact_id: string;
@@ -60,7 +61,7 @@ export async function dispatchAlert(
 
   const { data: contacts, error: contactsError } = await supabase
     .from("emergency_contacts")
-    .select("id, name, phone")
+    .select("id, name, phone, email")
     .eq("user_id", alert.user_id)
     .eq("verification_status", "verified")
     .order("created_at", { ascending: true });
@@ -70,19 +71,14 @@ export async function dispatchAlert(
   const { data: profile } = await supabase.from("profiles").select("email").eq("id", alert.user_id).maybeSingle();
   const who = profile?.email?.split("@")[0] ?? "Your contact";
 
-  const attempts: DeliveryAttempt[] = [];
+    const attempts: DeliveryAttempt[] = [];
   for (const c of contacts ?? []) {
-    if (!c.phone) continue;
-    const base = { contact_id: c.id, name: c.name, channel: "sms" as const, destination: c.phone, provider: "twilio" as const, at: new Date().toISOString() };
-    if (!E164.test(c.phone)) {
-      console.error(`[alert-sms] Invalid phone for contact ${c.id}: ${c.phone}`);
-      attempts.push({ ...base, status: "failed", note: "Invalid phone number (use +countrycode format)" });
-      continue;
-    }
-    const r = await sendSms(c.phone, smsBody(who));
-    if (r.mode === "test") attempts.push({ ...base, status: "simulated", note: "Test mode — Twilio not configured" });
+    if (!c.email) continue;
+    const base = { contact_id: c.id, name: c.name, channel: "email" as const, destination: c.email, provider: "resend" as const, at: new Date().toISOString() };
+    const r = await sendEmail(c.email, "Rhythm alert", smsBody(who));
+    if (r.mode === "test") attempts.push({ ...base, status: "simulated", note: "Test mode — Resend not configured" });
     else if (r.error) attempts.push({ ...base, status: "failed", note: r.error.slice(0, 500) });
-    else attempts.push({ ...base, status: "sent", ...(r.sid ? { sid: r.sid } : {}) });
+    else attempts.push({ ...base, status: "sent" });
   }
 
   const channelsUsed = [...new Set(attempts.filter((a) => a.status !== "failed").map((a) => a.channel))];
