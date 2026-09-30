@@ -26,12 +26,12 @@ export const Route = createFileRoute("/_authenticated/home")({
     search["view"] === "closed" ? { view: "closed" } : {},
   head: () => ({
     meta: [
-      { title: "Rhythm — A quiet typing safety companion" },
+      { title: "Rhythm" },
       {
         name: "description",
         content: "Rhythm notices sudden changes in typing timing and checks that you are okay.",
       },
-      { property: "og:title", content: "Rhythm — A quiet typing safety companion" },
+      { property: "og:title", content: "Rhythm" },
       {
         property: "og:description",
         content:

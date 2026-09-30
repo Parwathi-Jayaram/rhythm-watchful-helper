@@ -6,9 +6,9 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Rhythm — A quiet typing safety companion" },
+      { title: "Rhythm" },
       { name: "description", content: "Rhythm notices sudden changes in typing timing and checks that you are okay." },
-      { property: "og:title", content: "Rhythm — A quiet typing safety companion" },
+      { property: "og:title", content: "Rhythm" },
       { property: "og:description", content: "A calm companion that notices sudden changes in typing timing without reading words." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
