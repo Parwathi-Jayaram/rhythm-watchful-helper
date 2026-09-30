@@ -78,7 +78,7 @@ The `ml/` directory trains and scores a keystroke autoencoder.
 
 ```bash
 cd ml
-pip install numpy, torch
+pip install numpy torch
 python train_model.py
 ```
 
