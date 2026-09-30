@@ -49,12 +49,16 @@ type Contact = {
   id: string;
   name: string;
   phone: string;
+  email: string;
   status: "Not tested" | "Sent" | "Delivered";
   saved?: boolean;
   verificationStatus?: "verified" | "pending" | "unverified";
 };
 
 const BAR_HEIGHTS = [18, 29, 22, 42, 26, 35, 19, 47, 29, 38, 23, 32, 18, 40, 25, 34, 21];
+
+/** Basic email validation used by the contact form. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Inserts a contact into emergency_contacts linked to the currently
@@ -65,8 +69,11 @@ async function saveContact(
   contact: Omit<Contact, "id" | "saved">,
 ): Promise<{ id: string } | { error: string }> {
   try {
-    const payload: { name: string; phone?: string } = { name: contact.name.trim() };
+    const payload: { name: string; phone?: string; email?: string } = {
+      name: contact.name.trim(),
+    };
     if (contact.phone.trim()) payload.phone = contact.phone.trim();
+    if (contact.email?.trim()) payload.email = contact.email.trim();
     const { contact: saved } = await addContact(payload);
     return { id: saved.id };
   } catch (err) {
@@ -165,6 +172,7 @@ function Setup({
   const [learning, setLearning] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [emailError, setEmailError] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (step !== 2 || learning >= 8) return;
@@ -175,7 +183,7 @@ function Setup({
     return () => window.clearInterval(timer);
   }, [step, learning]);
 
-  const updateContact = (id: string, key: "name" | "phone", value: string) => {
+  const updateContact = (id: string, key: "name" | "phone" | "email", value: string) => {
     setContacts((all) =>
       all.map((contact) => (contact.id === id ? { ...contact, [key]: value } : contact)),
     );
@@ -197,8 +205,13 @@ function Setup({
   /** Persists a single contact to emergency_contacts for the signed-in user. */
   const saveOne = async (contact: Contact) => {
     if (!contact.name.trim()) return;
+    if (contact.email?.trim() && !EMAIL_RE.test(contact.email.trim())) {
+      setEmailError((all) => ({ ...all, [contact.id]: "Enter a valid email address" }));
+      return;
+    }
     setSaving(true);
     setSaveError("");
+    setEmailError((all) => ({ ...all, [contact.id]: "" }));
     const result = await saveContact(contact);
     setSaving(false);
     if ("error" in result) {
@@ -319,7 +332,7 @@ function Setup({
                 {contacts.map((contact) => (
                   <div
                     key={contact.id}
-                    className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+                    className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end"
                   >
                     <label className="text-sm font-medium">
                       Name
@@ -336,6 +349,21 @@ function Setup({
                         value={contact.phone}
                         onChange={(event) => updateContact(contact.id, "phone", event.target.value)}
                       />
+                    </label>
+                    <label className="text-sm font-medium">
+                      Email
+                      <Input
+                        type="email"
+                        className="mt-2 h-11 rounded-lg text-base"
+                        placeholder="you@example.com"
+                        value={contact.email ?? ""}
+                        onChange={(event) => updateContact(contact.id, "email", event.target.value)}
+                      />
+                      {emailError[contact.id] && (
+                        <p role="alert" className="mt-1 text-xs text-destructive">
+                          {emailError[contact.id]}
+                        </p>
+                      )}
                     </label>
                     <div className="flex items-center gap-3 md:pb-0.5">
                       <Button
@@ -371,6 +399,7 @@ function Setup({
                         id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
                         name: "",
                         phone: "",
+                        email: "",
                         status: "Not tested",
                       },
                     ])
@@ -455,7 +484,8 @@ function Closed({
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const updateContact = (id: string, key: "name" | "phone", value: string) => {
+  const [emailError, setEmailError] = useState<Record<string, string>>({});
+  const updateContact = (id: string, key: "name" | "phone" | "email", value: string) => {
     setContacts((all) =>
       all.map((contact) => (contact.id === id ? { ...contact, [key]: value } : contact)),
     );
@@ -474,8 +504,13 @@ function Closed({
   };
   const saveContactRow = async (contact: Contact) => {
     if (!contact.name.trim()) return;
+    if (contact.email?.trim() && !EMAIL_RE.test(contact.email.trim())) {
+      setEmailError((all) => ({ ...all, [contact.id]: "Enter a valid email address" }));
+      return;
+    }
     setSaving(true);
     setSaveError("");
+    setEmailError((all) => ({ ...all, [contact.id]: "" }));
     const result = await saveContact(contact);
     setSaving(false);
     if ("error" in result) {
@@ -561,6 +596,21 @@ function Closed({
                   value={contact.phone}
                   onChange={(event) => updateContact(contact.id, "phone", event.target.value)}
                 />
+              </label>
+              <label className="text-sm font-medium">
+                Email
+                <Input
+                  type="email"
+                  className="mt-2 h-10 rounded-lg text-base"
+                  placeholder="you@example.com"
+                  value={contact.email ?? ""}
+                  onChange={(event) => updateContact(contact.id, "email", event.target.value)}
+                />
+                {emailError[contact.id] && (
+                  <p role="alert" className="mt-1 text-xs text-destructive">
+                    {emailError[contact.id]}
+                  </p>
+                )}
               </label>
               <div className="flex flex-wrap items-center gap-2">
                 <Button
@@ -651,6 +701,7 @@ function Closed({
                     id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
                     name: "",
                     phone: "",
+                    email: "",
                     status: "Not tested",
                   },
                 ])
@@ -891,6 +942,7 @@ async function loadContacts(): Promise<Contact[]> {
       id: row.id,
       name: row.name,
       phone: row.phone ?? "",
+      email: row.email ?? "",
       saved: true,
       status: "Not tested" as const,
       verificationStatus:
@@ -924,6 +976,7 @@ function Screens({ initial }: { initial: Screen }) {
                 id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 name: "",
                 phone: "",
+                email: "",
                 status: "Not tested",
               },
             ],
