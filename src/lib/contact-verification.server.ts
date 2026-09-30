@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
-import { sendSms } from "./twilio.server";
+import { sendSms } from "./fast2sms.server";
 
 export const CODE_TTL_MS = 15 * 60 * 1000;
 export const PENDING_TIMEOUT_MS = 24 * 60 * 60 * 1000;
