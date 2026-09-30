@@ -1,9 +1,6 @@
 # Rhythm Watchful Helper
 
-A keystroke + sensor anomaly detection helper that flags early signs of stroke
-via typing rhythm and grip patterns. Backed by a Supabase backend (auth,
-database, edge functions), a TanStack Start web app deployed on Cloudflare,
-and a PyTorch autoencoder for ML scoring.
+A keystroke + sensor anomaly detection helper that flags early signs of stroke via typing rhythm. Backed by a Supabase backend (auth,database, edge functions), a TanStack Start web app deployed on Cloudflare, and a PyTorch autoencoder for ML scoring.
 
 ## Project structure
 
@@ -17,26 +14,16 @@ and a PyTorch autoencoder for ML scoring.
 └── vite.config.ts          # build config (lovable tanstack preset)
 ```
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) **20+** (or [Bun](https://bun.sh/) 1.2+)
-- [Git](https://git-scm.com/)
-- A [Supabase](https://supabase.com/) account (project is already created)
-- A [Cloudflare](https://www.cloudflare.com/) account (for deployment)
-- [Python](https://www.python.org/) 3.11+ + `pip` (for the ML + native client)
-- [Twilio](https://www.twilio.com/) account (for alert SMS) — optional, see roadmap
-
 ## Quick start
 
 ### 1. Clone and install
 
 ```bash
-git clone <this-repository-url>
-cd <repository-name>
+git clone "https://github.com/Parwathi-Jayaram/rhythm-watchful-helper"
+cd rhythm-watchful-helper
 
-# Install JS dependencies (npm, or bun if you prefer)
+# Install JS dependencies
 npm i
-# bun install      # alternative
 ```
 
 ### 2. Set up environment variables
@@ -77,30 +64,11 @@ supabase db push
 This creates the tables for users, consents, alerts, and contacts, plus the
 edge function at `supabase/functions/keystroke-similarity`.
 
-### 4. Deploy the edge function (optional but recommended)
-
-```bash
-supabase functions deploy keystroke-similarity
-```
-
 ### 5. Start the dev server
 
 ```bash
 npm run dev
-# or: bun run dev
 ```
-
-Open [http://localhost:5173](http://localhost:5173) (port may vary).
-
-### 6. Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
-Production deploys to Cloudflare via the TanStack Start + Nitro adapter
-(configured in `vite.config.ts`).
 
 ## ML model setup (Python)
 
@@ -110,9 +78,7 @@ The `ml/` directory trains and scores a keystroke autoencoder.
 
 ```bash
 cd ml
-pip install -r requirements.txt   # numpy, torch
-
-# Use real calibration data when available (see train_model.py docstring)
+pip install numpy, torch
 python train_model.py
 ```
 
@@ -123,14 +89,13 @@ anomaly threshold) and prints the suggested threshold.
 ### Live monitoring
 
 ```bash
-python live_monitor_v2.py     # v2 (end-to-end with alert pipeline)
+python live_monitor_v2.py    
 ```
 
 ## Native client (keystroke capture)
 
 ```bash
 cd native-client
-pip install -r requirements.txt
 python keystroke_capture.py
 ```
 
@@ -144,14 +109,5 @@ python keystroke_capture.py
 | `npm run lint` | Run ESLint |
 | `npm run format` | Format code with Prettier |
 
-## Configuration notes
-
-- **Build config**: `vite.config.ts` uses the `@lovable.dev/vite-tanstack-config`
-  preset. Do **not** manually add TanStack/Vite plugins here — they are already
-  included and duplicating them will break the build.
-- **Package manager**: This project uses Bun (`bunfig.toml`, `bun.lock`).
-  `npm` also works, but `bun install` is the canonical path.
-- **TypeScript**: Uses `@path/aliases` (e.g. `@/components/...`). See
-  `tsconfig.json` for paths config.
 
 
