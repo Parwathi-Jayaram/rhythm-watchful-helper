@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
-import { sendSms } from "./fast2sms.server";
+import { sendEmail } from "./email.server";
 
 export const CODE_TTL_MS = 15 * 60 * 1000;
 export const PENDING_TIMEOUT_MS = 24 * 60 * 60 * 1000;
@@ -71,10 +71,12 @@ export async function sendVerification(
     return { ok: false as const, status: 429, error: "Please wait 30 seconds before resending" };
   }
 
-  const code = generateCode();
-  const sms = await sendSms(
-    contact.phone,
-    `Rhythm: ${senderName} added you as an emergency contact. Your code is ${code}. It expires in 15 minutes.`,
+    const code = generateCode();
+  if (!contact.email) return { ok: false as const, status: 400, error: "Contact has no email address" };
+  const sms = await sendEmail(
+    contact.email,
+    "Your Rhythm verification code",
+    `${senderName} added you as an emergency contact. Your code is ${code}. It expires in 15 minutes.`,
   );
   if (sms.error) return { ok: false as const, status: 502, error: sms.error };
 
