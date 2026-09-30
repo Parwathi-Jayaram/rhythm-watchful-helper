@@ -1,23 +1,32 @@
-# Rhythm Watchful Helper 🚨⌨️
+# Rhythm Watchful Helper
 
-An automated, non-invasive health monitoring daemon that uses **keystroke dynamics** to detect sudden onset medical emergencies—such as stroke, severe dizziness, or cognitive distress—and dispatches immediate alerts to emergency contacts.
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?logo=github)](https://github.com/Parwathi-Jayaram/rhythm-watchful-helper)
 
----
+## Overview
 
-## 📌 Overview
+Rhythm Watchful Helper is an AI-assisted early-warning system that monitors a user's typing patterns and detects unusual changes in their normal typing rhythm.
 
-**Rhythm Watchful Helper** passively monitors continuous typing patterns in the background. Neuromuscular impairment or acute cognitive disorientation rapidly manifests as measurable deviations in typing mechanics—specifically key hold duration (**Dwell Time**) and interval delay between successive keys (**Flight Time**).
+When a significant and sustained change is detected, the system sends a warning to the user's verified emergency contacts via email/SMS, allowing them to check on the person and seek appropriate help if necessary.
 
-By analyzing these biometric timing metrics in real time against a pre-calibrated baseline, the application detects anomalous motor behavior and automatically triggers email alerts to trusted contacts—enabling fast intervention even when the user is unable to reach for a phone or trigger a manual alarm.
+The system focuses on **typing behavior rather than the content being typed**, making it possible to monitor changes in motor patterns without reading or storing the user's messages.
 
----
+> **Note:** Rhythm Watchful Helper is a prototype and is not intended to diagnose stroke or any other medical condition. An alert simply indicates an unusual change in typing behavior and should not be treated as a medical diagnosis.
 
-## 🔒 Privacy & Safety First
+## How It Works
 
-- **Zero Content Logging:** The system **only** records key press and key release timestamps. It does **not** log key characters, passwords, or text typed.
-- **Local Processing:** All anomaly computations run locally on your device. Typing metrics are never sent to external servers or cloud analytics.
-- **False-Positive Guardrails:** Built-in sliding-window confirmation prevents single accidental key holds or typos from triggering false panic alarms.
+1. **Monitor** — The system captures typing-pattern information such as typing speed, dwell time, flight time, and typing consistency.
+2. **Analyze** — A machine-learning model compares the current typing pattern with the user's normal pattern.
+3. **Detect** — Sustained unusual behavior triggers an alert.
+4. **Notify** — The system warns the user's verified emergency contacts.
+5. **Respond** — Emergency contacts can check on the user and take appropriate action if necessary.
 
----
+## Key Features
 
-## 🏗️ Technical Architecture
+- Personalized typing-pattern monitoring
+- Machine-learning based anomaly detection
+- Detection of sustained changes in typing behavior
+- Emergency contact management
+- Emergency contact verification
+- Automatic warning notifications
+- Alert history
+- Privacy-focused monitoring that does not analyze typed message content
