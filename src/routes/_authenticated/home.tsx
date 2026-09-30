@@ -521,9 +521,9 @@ function Closed({
       all.map((c) => (c.id === contact.id ? { ...c, id: result.id, saved: true } : c)),
     );
   };
-  /** Sends a verification code to the contact's phone. */
+  /** Sends a verification code to the contact's email. */
   const startVerification = async (contact: Contact) => {
-    if (!contact.saved || !contact.phone.trim()) return;
+    if (!contact.saved || !contact.email?.trim()) return;
     setSaving(true);
     setSaveError("");
     try {
@@ -626,7 +626,7 @@ function Closed({
                   <span className="flex items-center gap-1 rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">
                     <Check className="h-3.5 w-3.5" /> Verified
                   </span>
-                ) : contact.saved && contact.phone.trim() ? (
+                ) : contact.saved && contact.email?.trim() ? (
                   verifyingId === contact.id ? (
                     <>
                       <Input
